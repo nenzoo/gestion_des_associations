@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import PublicLayout from '../layouts/PublicLayout';
+import HomePage from '../pages/public/HomePage';
+import PublicCatalogPage from '../pages/public/PublicCatalogPage';
 
 function RoutePlaceholder({ badge, title, description }) {
   return (
@@ -46,6 +48,9 @@ function RoutePlaceholder({ badge, title, description }) {
         <Link to="/" className="navbar__login-btn">
           Accueil
         </Link>
+        <Link to="/evenements" className="navbar__login-btn">
+          Événements &amp; Annonces
+        </Link>
         <Link to="/adhesion" className="navbar__login-btn">
           Demande d’adhésion
         </Link>
@@ -62,26 +67,8 @@ function AppRoutes() {
     <Routes>
       {/* Routes publiques avec Navbar et Footer */}
       <Route element={<PublicLayout />}>
-        <Route
-          path="/"
-          element={
-            <RoutePlaceholder
-              badge="UNIVERSITÉ LUMIÈRE LYON 2"
-              title="Accueil public · Agora"
-              description="La Landing Page complète sera développée lors de la Tâche 1.4."
-            />
-          }
-        />
-        <Route
-          path="/evenements"
-          element={
-            <RoutePlaceholder
-              badge="AGENDA PUBLIC"
-              title="Événements et annonces"
-              description="Catalogue public des événements et annonces de l'association Agora."
-            />
-          }
-        />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/evenements" element={<PublicCatalogPage />} />
         <Route
           path="/connexion"
           element={
