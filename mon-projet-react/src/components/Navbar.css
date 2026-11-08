@@ -1,0 +1,169 @@
+.navbar {
+  background-color: var(--color-surface-navbar);
+  border-bottom: 1px solid var(--color-border);
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+
+.navbar__container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--navbar-height);
+  padding: var(--space-18) var(--space-64);
+  width: 100%;
+}
+
+/* Identité Agora (2:57719) */
+.navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.navbar__logo-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-size-xl);
+  height: var(--icon-size-xl);
+  border-radius: var(--radius-sm);
+  background: var(--gradient-brand);
+  flex-shrink: 0;
+}
+
+.navbar__logo-icon {
+  width: var(--icon-size-lg);
+  height: var(--icon-size-lg);
+  display: block;
+}
+
+.navbar__logo-text {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-extrabold);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.navbar__logo-campus {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* Liens publics Bureau (2:57724) */
+.navbar__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-28);
+}
+
+.navbar__link {
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.navbar__link:hover {
+  color: var(--color-violet);
+}
+
+.navbar__link--active {
+  font-weight: var(--weight-semibold);
+}
+
+/* Bouton · Se connecter (2:57728) */
+.navbar__login-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  color: var(--color-violet);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.navbar__login-btn:hover {
+  border-color: var(--color-violet);
+}
+
+.navbar__login-btn--full {
+  width: 100%;
+}
+
+/* Bouton menu Mobile (2:62883) */
+.navbar__mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.navbar__mobile-toggle-icon {
+  width: var(--icon-size-base);
+  height: var(--icon-size-base);
+  display: block;
+}
+
+.navbar__mobile-drawer {
+  display: none;
+}
+
+/* Responsive Mobile (2:57861 — 390px) */
+@media (max-width: 768px) {
+  .navbar__container {
+    min-height: 76px;
+    padding: var(--space-18) var(--space-20);
+  }
+
+  .navbar__links {
+    display: none;
+  }
+
+  .navbar__mobile-toggle {
+    display: inline-flex;
+  }
+
+  .navbar__mobile-drawer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    padding: var(--space-16) var(--space-20) var(--space-20);
+    background-color: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .navbar__mobile-link {
+    font-size: var(--text-md);
+    font-weight: var(--weight-regular);
+    color: var(--color-text-primary);
+    padding: var(--space-8) 0;
+  }
+
+  .navbar__mobile-link--active {
+    font-weight: var(--weight-semibold);
+    color: var(--color-violet);
+  }
+}

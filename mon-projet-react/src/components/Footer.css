@@ -1,0 +1,56 @@
+/* Pied de page Bureau (2:57854) & Mobile (2:57958) */
+.footer {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-20);
+  padding: var(--space-40);
+  width: 100%;
+  background-color: var(--color-bg);
+}
+
+.footer__brand {
+  font-size: var(--text-md);
+  font-weight: var(--weight-extrabold);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.footer__info {
+  flex: 1 0 0;
+  min-width: 1px;
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--color-text-secondary);
+}
+
+.footer__line {
+  line-height: var(--line-height-base);
+}
+
+.footer__legal {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .footer {
+    flex-direction: column;
+    padding: var(--space-24);
+    gap: var(--space-20);
+  }
+
+  .footer__info {
+    width: 100%;
+  }
+
+  .footer__legal {
+    white-space: normal;
+  }
+}
