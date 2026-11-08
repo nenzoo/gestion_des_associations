@@ -1,111 +1,172 @@
+/* ==========================================================================
+   AGORA · DESIGN SYSTEM 1.0 (Extrait de la bibliothèque Figma 2:61757)
+   Police : Plus Jakarta Sans | Grille : 8 px | Bureau 1440 px / Mobile 390 px
+   ========================================================================== */
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* --- Palette principale (Fondations · Couleurs) --- */
+  --color-violet: #6c4cf1;
+  --color-blue: #3b82f6;
+  --color-coral: #ff6b6b;
+  --color-ink: #20223d;
+  --color-bg: #f5f6fc;
+  --color-success: #168466;
+  --color-warning: #a96b12;
+  --color-danger-text: #c64451;
+  --color-danger-btn: #cc414c;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* --- Surfaces et textes --- */
+  --color-surface: #ffffff;
+  --color-surface-navbar: rgba(255, 255, 255, 0.91);
+  --color-surface-glass: rgba(255, 255, 255, 0.93);
+  --color-surface-counter: rgba(255, 255, 255, 0.72);
+  --color-border: #e7e8f2;
+  --color-text-primary: #20223d;
+  --color-text-secondary: #74768d;
+  --color-text-on-brand: #ffffff;
+  --color-text-on-brand-muted: #e8e3ff;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* --- Fonds de badges, puces et alertes --- */
+  --color-violet-soft: #efebff;
+  --color-success-soft: #e7f6ef;
+  --color-warning-soft: #fff4de;
+  --color-danger-soft: #fff0f0;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* --- Dégradés --- */
+  --gradient-brand: linear-gradient(90deg, #6c4cf1 0%, #3b82f6 100%);
+  --gradient-pastel: linear-gradient(90deg, #f0eaff 0%, #eaf3ff 100%);
+
+  /* --- Ombres --- */
+  --shadow-card: 0px 6px 24px 0px rgba(38, 32, 77, 0.03);
+
+  /* --- Typographie (Plus Jakarta Sans) --- */
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --line-height-base: 1.5;
+
+  /* Échelle typographique */
+  --text-xs-tiny: 9px;
+  --text-xs: 10px;
+  --text-sm-tiny: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-base: 14px;
+  --text-lg-sm: 16px;
+  --text-lg: 17px;
+  --text-xl-sm: 18px;
+  --text-xl-md: 19px;
+  --text-xl: 20px;
+  --text-2xl: 25px;
+  --text-3xl: 30px;
+  --text-3xl-lg: 32px;
+  --text-4xl: 36px;
+  --text-5xl: 42px;
+  --text-hero: 62px;
+
+  /* Graisses typographiques */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+
+  /* --- Espacements (Grille de 8 px + valeurs exactes Figma) --- */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-28: 28px;
+  --space-32: 32px;
+  --space-36: 36px;
+  --space-40: 40px;
+  --space-48: 48px;
+  --space-56: 56px;
+  --space-64: 64px;
+  --space-80: 80px;
+  --space-100: 100px;
+
+  /* --- Rayons de bordure (Surfaces et rythme) --- */
+  --radius-badge: 7px;
+  --radius-control: 10px;
+  --radius-sm: 12px;
+  --radius-card: 16px;
+  --radius-hero: 24px;
+  --radius-pill: 100px;
+
+  /* --- Dimensions des contrôles et icônes --- */
+  --control-height-sm: 34px;
+  --control-height-btn: 46px;
+  --control-height-input: 48px;
+  --navbar-height: 80px;
+  --sidebar-width: 232px;
+  --icon-size-sm: 16px;
+  --icon-size-md: 18px;
+  --icon-size-base: 20px;
+  --icon-size-lg: 22px;
+  --icon-size-xl: 36px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+/* --- Thème sombre (Extrait de Tableau de bord · Sombre 2:59477) --- */
+[data-theme='dark'] {
+  --color-bg: #111324;
+  --color-surface: #1c1f35;
+  --color-surface-navbar: #1c1f35;
+  --color-border: #30344d;
+  --color-text-primary: #f2f2ff;
+  --color-text-secondary: #a4a8c3;
+  --color-violet-soft: #302955;
 }
 
-body {
-  margin: 0;
-}
+/* ==========================================================================
+   Reset & Base
+   ========================================================================== */
 
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
 p {
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
