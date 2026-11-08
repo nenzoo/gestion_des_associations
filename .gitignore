@@ -1,0 +1,58 @@
+# ==========================================
+# IDEs & Editors (IntelliJ / PhpStorm / VSCode)
+# ==========================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/*
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==========================================
+# OS & System Files
+# ==========================================
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+*.local
+
+# ==========================================
+# Frontend (React / Vite / Node)
+# ==========================================
+**/node_modules/
+**/dist/
+**/dist-ssr/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==========================================
+# Backend (Laravel / PHP)
+# ==========================================
+**/vendor/
+**/storage/*.key
+**/storage/framework/cache/**
+**/storage/framework/sessions/**
+**/storage/framework/testing/**
+**/storage/framework/views/**
+**/storage/logs/**
+**/bootstrap/cache/*.php
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+auth.json
