@@ -5,7 +5,7 @@ import {
   MEMBERSHIP_STATUS,
   MOCK_USERS,
   TRUST_AVATARS,
-} from '../data/authMockData';
+} from '../data/authMockData.js';
 
 /**
  * Service d'authentification et d'adhésion (simulation Frontend).
@@ -13,11 +13,39 @@ import {
  * - POST /api/membership-requests
  * - GET  /api/membership-requests/status
  * - POST /api/login
+ * - POST /api/logout
  */
 
+const SESSION_STORAGE_KEY = 'clubmanager_current_user';
+const LATEST_REQUEST_STORAGE_KEY = 'clubmanager_latest_membership_request';
+
 let membershipRequestsStore = [...INITIAL_MEMBERSHIP_REQUESTS];
-let latestSubmittedRequest = INITIAL_MEMBERSHIP_REQUESTS[0];
-let currentSessionUser = null;
+let latestSubmittedRequest = readStorageJson(
+  LATEST_REQUEST_STORAGE_KEY,
+  INITIAL_MEMBERSHIP_REQUESTS[0]
+);
+let currentSessionUser = readStorageJson(SESSION_STORAGE_KEY, null);
+
+function readStorageJson(key, fallback) {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeStorageJson(key, value) {
+  try {
+    if (value === null || value === undefined) {
+      window.localStorage.removeItem(key);
+    } else {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    }
+  } catch {
+    // Ignore storage errors in restricted environments
+  }
+}
 
 export function getInitialMembershipForm() {
   return { ...INITIAL_MEMBERSHIP_FORM };
@@ -49,11 +77,26 @@ export function submitMembershipRequest(formData) {
 
   membershipRequestsStore = [newRequest, ...membershipRequestsStore];
   latestSubmittedRequest = newRequest;
+  writeStorageJson(LATEST_REQUEST_STORAGE_KEY, latestSubmittedRequest);
 
   return newRequest;
 }
 
 export function getLatestMembershipRequest() {
+  const user = getCurrentUser();
+  if (
+    user &&
+    (user.membershipStatus === MEMBERSHIP_STATUS.EN_ATTENTE ||
+      user.membershipStatus === MEMBERSHIP_STATUS.REFUSEE)
+  ) {
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      studentNumber: user.studentNumber || '22610890',
+      status: user.membershipStatus,
+    };
+  }
   return latestSubmittedRequest;
 }
 
@@ -67,35 +110,79 @@ export function loginWithCredentials({ email, password }) {
     };
   }
 
-  // Vérifier si une demande d'adhésion est encore EN_ATTENTE pour cet e-mail
-  const pendingRequest = membershipRequestsStore.find(
-    (req) =>
-      req.email.toLowerCase() === cleanEmail &&
-      req.status === MEMBERSHIP_STATUS.EN_ATTENTE
-  );
-
+  // Rechercher d'abord un utilisateur connu parmi les profils fictifs
   const matchedUser = MOCK_USERS.find(
     (u) => u.email.toLowerCase() === cleanEmail
   );
 
-  currentSessionUser = matchedUser || {
-    id: 'usr-session',
-    firstName: pendingRequest ? pendingRequest.firstName : 'Manon',
-    lastName: pendingRequest ? pendingRequest.lastName : 'Laurent',
-    email: cleanEmail,
-    role: 'Membre',
-    membershipStatus: pendingRequest
-      ? MEMBERSHIP_STATUS.EN_ATTENTE
-      : MEMBERSHIP_STATUS.ACCEPTEE,
-  };
+  // Vérifier si une demande d'adhésion soumise dynamiquement existe pour cet e-mail
+  const matchedRequest = membershipRequestsStore.find(
+    (req) => req.email.toLowerCase() === cleanEmail
+  );
+
+  if (matchedUser) {
+    currentSessionUser = { ...matchedUser };
+  } else if (matchedRequest) {
+    currentSessionUser = {
+      id: `usr-${matchedRequest.id}`,
+      firstName: matchedRequest.firstName,
+      lastName: matchedRequest.lastName,
+      email: cleanEmail,
+      studentNumber: matchedRequest.studentNumber,
+      role: 'Membre',
+      membershipStatus: matchedRequest.status,
+    };
+  } else {
+    currentSessionUser = {
+      ...MOCK_USERS[0],
+      email: cleanEmail,
+    };
+  }
+
+  writeStorageJson(SESSION_STORAGE_KEY, currentSessionUser);
+
+  if (
+    currentSessionUser.membershipStatus === MEMBERSHIP_STATUS.EN_ATTENTE ||
+    currentSessionUser.membershipStatus === MEMBERSHIP_STATUS.REFUSEE
+  ) {
+    latestSubmittedRequest = {
+      firstName: currentSessionUser.firstName,
+      lastName: currentSessionUser.lastName,
+      email: currentSessionUser.email,
+      studentNumber: currentSessionUser.studentNumber || '22610890',
+      status: currentSessionUser.membershipStatus,
+    };
+    writeStorageJson(LATEST_REQUEST_STORAGE_KEY, latestSubmittedRequest);
+  }
 
   return {
     ok: true,
     user: currentSessionUser,
-    pendingRequest: pendingRequest || null,
+    pendingRequest:
+      currentSessionUser.membershipStatus === MEMBERSHIP_STATUS.EN_ATTENTE
+        ? latestSubmittedRequest
+        : null,
   };
 }
 
-export function getCurrentSessionUser() {
+/**
+ * Source de vérité unique pour la session utilisateur courante.
+ */
+export function getCurrentUser() {
+  if (!currentSessionUser) {
+    currentSessionUser = readStorageJson(SESSION_STORAGE_KEY, null);
+  }
   return currentSessionUser;
+}
+
+export function getCurrentSessionUser() {
+  return getCurrentUser();
+}
+
+/**
+ * Supprime la session locale de l'utilisateur.
+ */
+export function logout() {
+  currentSessionUser = null;
+  writeStorageJson(SESSION_STORAGE_KEY, null);
 }

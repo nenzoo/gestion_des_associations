@@ -461,6 +461,61 @@
   color: var(--color-warning);
 }
 
+.auth-status-badge--refused {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+/* --- Sélecteur rapide des 3 profils de test (Connexion) --- */
+.auth-demo-profiles {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.auth-demo-profiles__title {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+}
+
+.auth-demo-profiles__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+
+.auth-demo-profiles__btn {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-badge);
+  padding: 5px 9px;
+  color: var(--color-text-primary);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-height-base);
+  cursor: pointer;
+}
+
+.auth-demo-profiles__btn:hover {
+  border-color: var(--color-violet);
+  color: var(--color-violet);
+}
+
+.auth-demo-profiles__btn--active {
+  background-color: var(--color-violet-soft);
+  border-color: var(--color-violet);
+  color: var(--color-violet);
+}
+
 /* --- Prochaines étapes Confirmation (2:58342) --- */
 .auth-steps-box {
   background-color: var(--color-bg);

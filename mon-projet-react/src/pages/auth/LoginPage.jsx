@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AuthSplitShell from './AuthSplitShell';
+import { MEMBERSHIP_STATUS } from '../../data/authMockData';
 import {
   getInitialLoginForm,
   loginWithCredentials,
@@ -11,8 +12,24 @@ import checkIcon from '../../assets/icons/check.svg';
 import arrowRightIcon from '../../assets/icons/arrow-right.svg';
 import circleCheckGreenIcon from '../../assets/icons/circle-check-green.svg';
 
+const TEST_STUDENT_PROFILES = [
+  {
+    label: 'Manon Laurent (ACCEPTEE)',
+    email: 'manon.laurent@univ-lyon2.fr',
+  },
+  {
+    label: 'Étudiant test (EN_ATTENTE)',
+    email: 'etudiant.attente@univ-lyon2.fr',
+  },
+  {
+    label: 'Étudiant test (REFUSEE)',
+    email: 'etudiant.refuse@univ-lyon2.fr',
+  },
+];
+
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const initialForm = getInitialLoginForm();
 
   const [email, setEmail] = useState(initialForm.email);
@@ -34,16 +51,18 @@ function LoginPage() {
       return;
     }
 
-    // Règle fondamentale §4 : Si la demande d'adhésion est encore EN_ATTENTE,
-    // l'étudiant consulte le statut de sa demande sans accéder au Dashboard membre.
-    if (result.pendingRequest) {
-      navigate('/adhesion/envoyee');
+    // Règle fondamentale §4 : Si la demande d'adhésion est EN_ATTENTE ou REFUSEE,
+    // l'étudiant consulte le statut de sa demande sans accéder à l'espace membre.
+    if (result.user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE) {
+      navigate('/adhesion/envoyee', {
+        replace: true,
+        state: { status: result.user.membershipStatus },
+      });
       return;
     }
 
-    setFeedbackMessage(
-      `Connexion simulée réussie (${result.user.firstName} ${result.user.lastName} · ${result.user.role}).`
-    );
+    const destination = location.state?.from?.pathname || '/etudiant/profil';
+    navigate(destination, { replace: true });
   };
 
   return (
@@ -58,6 +77,35 @@ function LoginPage() {
           Connecte-toi à ton espace Agora, le point de départ de ta vie
           associative.
         </p>
+      </div>
+
+      {/* Sélecteur des 3 profils étudiants fictifs validés (Point 3) */}
+      <div className="auth-demo-profiles">
+        <span className="auth-demo-profiles__title">
+          PROFILS DE TEST ÉTUDIANTS
+        </span>
+        <div className="auth-demo-profiles__list">
+          {TEST_STUDENT_PROFILES.map((profile) => {
+            const isSelected =
+              email.trim().toLowerCase() === profile.email.toLowerCase();
+            return (
+              <button
+                key={profile.email}
+                type="button"
+                className={`auth-demo-profiles__btn ${
+                  isSelected ? 'auth-demo-profiles__btn--active' : ''
+                }`}
+                onClick={() => {
+                  setEmail(profile.email);
+                  setErrorMessage('');
+                  setFeedbackMessage('');
+                }}
+              >
+                {profile.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
