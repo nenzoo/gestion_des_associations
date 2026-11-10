@@ -153,10 +153,21 @@ function getInitialTheme() {
 function StudentLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [, setUserVersion] = useState(0);
   const user = getCurrentUser();
 
   const [theme, setTheme] = useState(getInitialTheme);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleUserUpdated = () => {
+      setUserVersion((v) => v + 1);
+    };
+    window.addEventListener('clubmanager:user-updated', handleUserUpdated);
+    return () => {
+      window.removeEventListener('clubmanager:user-updated', handleUserUpdated);
+    };
+  }, []);
 
   useEffect(() => {
     if (theme === 'dark') {

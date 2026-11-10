@@ -7,6 +7,8 @@ import PublicCatalogPage from '../pages/public/PublicCatalogPage';
 import LoginPage from '../pages/auth/LoginPage';
 import MembershipRequestPage from '../pages/auth/MembershipRequestPage';
 import MembershipSentPage from '../pages/auth/MembershipSentPage';
+import StudentProfilePage from '../pages/student/StudentProfilePage';
+import StudentSecurityPage from '../pages/student/StudentSecurityPage';
 
 function StudentRoutePlaceholder({ eyebrow, title, subtitle }) {
   return (
@@ -56,33 +58,15 @@ function AppRoutes() {
         }
       >
         <Route index element={<Navigate to="profil" replace />} />
-        <Route
-          path="profil"
-          element={
-            <StudentRoutePlaceholder
-              eyebrow="MON ESPACE AGORA"
-              title="Mon profil"
-              subtitle="Tes informations, toujours à jour."
-            />
-          }
-        />
-        <Route
-          path="securite"
-          element={
-            <StudentRoutePlaceholder
-              eyebrow="SÉCURITÉ"
-              title="Sécurité du compte"
-              subtitle="Protège ton accès à l’espace membre."
-            />
-          }
-        />
+        <Route path="profil" element={<StudentProfilePage />} />
+        <Route path="securite" element={<StudentSecurityPage />} />
         <Route
           path="inscriptions"
           element={
             <StudentRoutePlaceholder
-              eyebrow="MES ÉVÉNEMENTS"
-              title="Mes inscriptions"
-              subtitle="Retrouve les événements auxquels tu participes."
+              eyebrow="MES INSCRIPTIONS"
+              title="Tes prochains rendez-vous"
+              subtitle="2 inscriptions confirmées. Retrouve les détails et gère ta participation."
             />
           }
         />
