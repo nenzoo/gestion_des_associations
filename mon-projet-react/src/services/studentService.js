@@ -169,6 +169,15 @@ function getMaxSeatsForEvent(eventId) {
   return targetEvent.remainingSeats + initialRegisteredCount;
 }
 
+function clampEventSeats(eventId, rawValue, fallbackSeats) {
+  const maxSeats = getMaxSeatsForEvent(eventId);
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed)) {
+    return Math.max(0, Math.min(maxSeats, Number(fallbackSeats) || 0));
+  }
+  return Math.max(0, Math.min(maxSeats, Math.trunc(parsed)));
+}
+
 /**
  * Vérifie si l'annulation est fermée (moins de 24 h avant le début de l'événement).
  */
@@ -188,7 +197,21 @@ function isEventCancellationClosed(eventId, referenceNowMs = Date.now()) {
 function getEventSeatsStore() {
   const initialMap = getInitialEventSeatsMap();
   const stored = readStorageJson(EVENT_SEATS_STORAGE_KEY, null);
-  return stored ? { ...initialMap, ...stored } : initialMap;
+  if (!stored || typeof stored !== 'object') {
+    return initialMap;
+  }
+
+  const sanitizedMap = { ...initialMap };
+  PUBLIC_EVENTS.forEach((evt) => {
+    if (stored[evt.id] !== undefined) {
+      sanitizedMap[evt.id] = clampEventSeats(
+        evt.id,
+        stored[evt.id],
+        evt.remainingSeats
+      );
+    }
+  });
+  return sanitizedMap;
 }
 
 function saveEventSeatsStore(store) {
@@ -715,4 +738,12 @@ export function getStudentEventCategories() {
 
 export function getStudentAnnouncements() {
   return PUBLIC_ANNOUNCEMENTS;
+}
+
+export function getSynchronizedEventSeats(eventId, fallbackSeats = 0) {
+  const seatsStore = getEventSeatsStore();
+  if (seatsStore[eventId] !== undefined) {
+    return seatsStore[eventId];
+  }
+  return clampEventSeats(eventId, fallbackSeats, fallbackSeats);
 }

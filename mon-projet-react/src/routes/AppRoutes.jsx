@@ -10,29 +10,7 @@ import MembershipSentPage from '../pages/auth/MembershipSentPage';
 import StudentProfilePage from '../pages/student/StudentProfilePage';
 import StudentSecurityPage from '../pages/student/StudentSecurityPage';
 import StudentRegistrationsPage from '../pages/student/StudentRegistrationsPage';
-
-function StudentRoutePlaceholder({ eyebrow, title, subtitle }) {
-  return (
-    <>
-      <div className="student-page-header">
-        <p className="student-page-header__eyebrow">{eyebrow}</p>
-        <div className="student-page-header__row">
-          <div className="student-page-header__intro">
-            <h1 className="student-page-header__title">{title}</h1>
-            <p className="student-page-header__subtitle">{subtitle}</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="student-placeholder-card">
-        <h2 className="student-placeholder-card__title">{title}</h2>
-        <p className="student-placeholder-card__text">
-          Vue prête à être implémentée dans la tâche dédiée du Jour 2.
-        </p>
-      </div>
-    </>
-  );
-}
+import StudentEventsPage from '../pages/student/StudentEventsPage';
 
 function AppRoutes() {
   return (
@@ -62,16 +40,7 @@ function AppRoutes() {
         <Route path="profil" element={<StudentProfilePage />} />
         <Route path="securite" element={<StudentSecurityPage />} />
         <Route path="inscriptions" element={<StudentRegistrationsPage />} />
-        <Route
-          path="evenements"
-          element={
-            <StudentRoutePlaceholder
-              eyebrow="VIE DU CAMPUS"
-              title="Événements & Annonces"
-              subtitle="Inscris-toi aux événements et consulte les annonces d’Agora."
-            />
-          }
-        />
+        <Route path="evenements" element={<StudentEventsPage />} />
       </Route>
 
       {/* Redirection par défaut vers l'accueil */}
