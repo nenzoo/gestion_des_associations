@@ -2,7 +2,19 @@ import { Link } from 'react-router-dom';
 import mapPinIcon from '../assets/icons/map-pin.svg';
 import './EventCard.css';
 
-function EventCard({ event, actionLabel = 'Découvrir', actionTo = '/evenements' }) {
+function EventCard({
+  event,
+  actionLabel = 'Découvrir',
+  actionTo = '/evenements',
+  onAction,
+  actionVariant = 'primary',
+  actionIcon = null,
+  actionDisabled = false,
+}) {
+  const ctaClassName = `event-card__cta ${
+    actionVariant === 'secondary' ? 'event-card__cta--secondary' : ''
+  } ${actionDisabled ? 'event-card__cta--disabled' : ''}`;
+
   return (
     <article className="event-card">
       <div className="event-card__media">
@@ -36,9 +48,34 @@ function EventCard({ event, actionLabel = 'Découvrir', actionTo = '/evenements'
           <span className="event-card__price">{event.priceText}</span>
         </div>
 
-        <Link to={actionTo} className="event-card__cta">
-          {actionLabel}
-        </Link>
+        {typeof onAction === 'function' ? (
+          <button
+            type="button"
+            className={ctaClassName}
+            onClick={() => onAction(event)}
+            disabled={actionDisabled}
+          >
+            {actionIcon && (
+              <img
+                src={actionIcon}
+                alt=""
+                className="event-card__cta-icon"
+              />
+            )}
+            <span>{actionLabel}</span>
+          </button>
+        ) : (
+          <Link to={actionTo} className={ctaClassName}>
+            {actionIcon && (
+              <img
+                src={actionIcon}
+                alt=""
+                className="event-card__cta-icon"
+              />
+            )}
+            <span>{actionLabel}</span>
+          </Link>
+        )}
       </div>
     </article>
   );

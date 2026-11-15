@@ -82,8 +82,23 @@ export const INITIAL_REGISTRATIONS_BY_USER = {
   'usr-manon': ['evt-nuit-des-lumieres', 'evt-atelier-cv-cafe'],
 };
 
+/**
+ * Dates et heures de début ISO associées aux identifiants d'événements de `publicMockData.js`
+ * (sans modifier `publicMockData.js`), utilisées pour vérifier la règle métier :
+ * "Les annulations ferment 24 h avant l’événement."
+ */
+export const EVENT_START_DATES_BY_ID = {
+  'evt-nuit-des-lumieres': '2026-11-19T19:00:00',
+  'evt-atelier-cv-cafe': '2026-11-24T14:00:00',
+  'evt-campus-solidaire': '2026-11-28T10:00:00',
+};
+
+export const CANCELLATION_DEADLINE_HOURS = 24;
+
 export const STUDENT_REGISTRATION_LABELS = {
   confirmedBadge: 'Inscription confirmée',
   cancelNotice:
     'Un imprévu ? Annule ton inscription pour libérer une place. Les annulations ferment 24 h avant l’événement.',
+  cancellationClosedError:
+    'Les annulations sont fermées à moins de 24 h du début de l’événement.',
 };

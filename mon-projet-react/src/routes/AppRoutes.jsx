@@ -9,6 +9,7 @@ import MembershipRequestPage from '../pages/auth/MembershipRequestPage';
 import MembershipSentPage from '../pages/auth/MembershipSentPage';
 import StudentProfilePage from '../pages/student/StudentProfilePage';
 import StudentSecurityPage from '../pages/student/StudentSecurityPage';
+import StudentRegistrationsPage from '../pages/student/StudentRegistrationsPage';
 
 function StudentRoutePlaceholder({ eyebrow, title, subtitle }) {
   return (
@@ -60,16 +61,7 @@ function AppRoutes() {
         <Route index element={<Navigate to="profil" replace />} />
         <Route path="profil" element={<StudentProfilePage />} />
         <Route path="securite" element={<StudentSecurityPage />} />
-        <Route
-          path="inscriptions"
-          element={
-            <StudentRoutePlaceholder
-              eyebrow="MES INSCRIPTIONS"
-              title="Tes prochains rendez-vous"
-              subtitle="2 inscriptions confirmées. Retrouve les détails et gère ta participation."
-            />
-          }
-        />
+        <Route path="inscriptions" element={<StudentRegistrationsPage />} />
         <Route
           path="evenements"
           element={

@@ -1,10 +1,13 @@
+import { MEMBERSHIP_STATUS } from '../data/authMockData.js';
 import {
   EVENT_CATEGORIES,
   PUBLIC_ANNOUNCEMENTS,
   PUBLIC_EVENTS,
 } from '../data/publicMockData.js';
 import {
+  CANCELLATION_DEADLINE_HOURS,
   DEFAULT_STUDENT_PROFILE_TEMPLATE,
+  EVENT_START_DATES_BY_ID,
   INITIAL_REGISTRATIONS_BY_USER,
   INITIAL_STUDENT_PROFILES_BY_ID,
   STUDENT_REGISTRATION_LABELS,
@@ -144,6 +147,42 @@ function getInitialEventSeatsMap() {
     map[evt.id] = evt.remainingSeats;
   });
   return map;
+}
+
+/**
+ * Calcule le plafond maximal de places restantes d'un événement :
+ * capacité disponible initiale + nombre d'étudiants déjà inscrits par défaut dans
+ * `INITIAL_REGISTRATIONS_BY_USER` (afin qu'une annulation ne dépasse jamais la capacité totale).
+ */
+function getMaxSeatsForEvent(eventId) {
+  const targetEvent = PUBLIC_EVENTS.find((evt) => evt.id === eventId);
+  if (!targetEvent) {
+    return 0;
+  }
+  const initialRegisteredCount = Object.values(
+    INITIAL_REGISTRATIONS_BY_USER
+  ).reduce(
+    (acc, list) =>
+      acc + (Array.isArray(list) && list.includes(eventId) ? 1 : 0),
+    0
+  );
+  return targetEvent.remainingSeats + initialRegisteredCount;
+}
+
+/**
+ * Vérifie si l'annulation est fermée (moins de 24 h avant le début de l'événement).
+ */
+function isEventCancellationClosed(eventId, referenceNowMs = Date.now()) {
+  const startIso = EVENT_START_DATES_BY_ID[eventId];
+  if (!startIso) {
+    return false;
+  }
+  const startMs = new Date(startIso).getTime();
+  if (Number.isNaN(startMs)) {
+    return false;
+  }
+  const deadlineMs = CANCELLATION_DEADLINE_HOURS * 60 * 60 * 1000;
+  return startMs - referenceNowMs < deadlineMs;
 }
 
 function getEventSeatsStore() {
@@ -454,6 +493,7 @@ export function getEventsWithRegistrationState({
     const isRegistered = registeredIds.has(event.id);
     const isCancelled = Boolean(event.status === 'ANNULE' || event.isCancelled);
     const isFull = currentRemainingSeats <= 0;
+    const isCancellationClosed = isEventCancellationClosed(event.id);
 
     return {
       ...event,
@@ -462,6 +502,7 @@ export function getEventsWithRegistrationState({
       isRegistered,
       isCancelled,
       isFull,
+      isCancellationClosed,
       confirmedBadgeLabel: STUDENT_REGISTRATION_LABELS.confirmedBadge,
     };
   }).filter((event) => {
@@ -497,6 +538,7 @@ export function getStudentRegistrationsOverview() {
 
 /**
  * Inscrit l'étudiant connecté à un événement :
+ * - Vérifie que l'utilisateur est connecté et a le statut métier ACCEPTEE
  * - Empêche les inscriptions en double
  * - Empêche l'inscription à un événement complet ou annulé
  * - Décrémente de 1 le compteur de places restantes persistant
@@ -507,6 +549,14 @@ export function registerForEvent(eventId) {
     return {
       ok: false,
       error: 'Connecte-toi pour t’inscrire à un événement.',
+    };
+  }
+
+  if (sessionUser.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE) {
+    return {
+      ok: false,
+      error:
+        'Seuls les membres au statut ACCEPTEE peuvent s’inscrire aux événements.',
     };
   }
 
@@ -555,7 +605,7 @@ export function registerForEvent(eventId) {
   registrationsStore[userKey] = updatedRegistrations;
   saveRegistrationsStore(registrationsStore);
 
-  const updatedSeats = currentSeats - 1;
+  const updatedSeats = Math.max(0, currentSeats - 1);
   seatsStore[eventId] = updatedSeats;
   saveEventSeatsStore(seatsStore);
 
@@ -570,10 +620,12 @@ export function registerForEvent(eventId) {
 
 /**
  * Annule l'inscription de l'étudiant connecté à un événement :
+ * - Vérifie que l'utilisateur est connecté et a le statut métier ACCEPTEE
+ * - Empêche la désinscription si l'événement est annulé ou à moins de 24 h du début
  * - Empêche la désinscription si aucune inscription n'existe
- * - Incrémente de 1 le compteur de places restantes persistant
+ * - Incrémente de 1 le compteur de places restantes persistant sans dépasser la capacité initiale
  */
-export function cancelEventRegistration(eventId) {
+export function cancelEventRegistration(eventId, options = {}) {
   const sessionUser = getCurrentUser();
   if (!sessionUser) {
     return {
@@ -582,11 +634,27 @@ export function cancelEventRegistration(eventId) {
     };
   }
 
+  if (sessionUser.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE) {
+    return {
+      ok: false,
+      error:
+        'Seuls les membres au statut ACCEPTEE peuvent gérer leurs inscriptions.',
+    };
+  }
+
   const targetEvent = PUBLIC_EVENTS.find((evt) => evt.id === eventId);
   if (!targetEvent) {
     return {
       ok: false,
       error: 'Événement introuvable.',
+    };
+  }
+
+  if (targetEvent.status === 'ANNULE' || targetEvent.isCancelled) {
+    return {
+      ok: false,
+      error:
+        'Cet événement est annulé, l’annulation d’inscription n’est plus disponible.',
     };
   }
 
@@ -603,6 +671,19 @@ export function cancelEventRegistration(eventId) {
     };
   }
 
+  const referenceNowMs =
+    typeof options.referenceNowMs === 'number'
+      ? options.referenceNowMs
+      : Date.now();
+  if (isEventCancellationClosed(eventId, referenceNowMs)) {
+    return {
+      ok: false,
+      error:
+        STUDENT_REGISTRATION_LABELS.cancellationClosedError ||
+        'Les annulations sont fermées à moins de 24 h du début de l’événement.',
+    };
+  }
+
   const updatedRegistrations = currentUserRegistrations.filter(
     (id) => id !== eventId
   );
@@ -614,7 +695,8 @@ export function cancelEventRegistration(eventId) {
     seatsStore[eventId] !== undefined
       ? seatsStore[eventId]
       : targetEvent.remainingSeats;
-  const updatedSeats = currentSeats + 1;
+  const maxSeats = getMaxSeatsForEvent(eventId);
+  const updatedSeats = Math.min(maxSeats, currentSeats + 1);
   seatsStore[eventId] = updatedSeats;
   saveEventSeatsStore(seatsStore);
 
