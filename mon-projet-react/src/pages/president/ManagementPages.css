@@ -1,0 +1,571 @@
+/* ==========================================================================
+   Pages de l'espace Gestion (Présidence & Secrétariat) — Figma :
+   - Tableau de bord · Bureau 2:59170 & Mobile 2:59333
+   - Tableau de bord · Bureau · Sombre 2:59477 & Mobile · Sombre 2:59640
+   ========================================================================== */
+
+/* --- En-tête de page avec bouton d'action (2:59215 Bureau / 2:59349 Mobile) --- */
+.management-page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.management-page-header__eyebrow {
+  color: var(--color-violet);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-page-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  width: 100%;
+}
+
+.management-page-header__intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  flex: 1 0 0;
+  min-width: 1px;
+}
+
+.management-page-header__title {
+  color: var(--color-text-primary);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-extrabold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-page-header__subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+/* --- Boutons d'action de l'espace gestion --- */
+.management-btn-primary {
+  background: var(--gradient-brand);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  color: var(--color-text-on-brand);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.management-btn-primary:hover {
+  opacity: 0.96;
+}
+
+.management-btn-primary__icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  display: block;
+  flex-shrink: 0;
+}
+
+.management-btn-secondary {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  color: var(--color-violet);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.management-btn-secondary:hover {
+  border-color: var(--color-violet);
+  background-color: var(--color-violet-soft);
+}
+
+/* --- Bannière "À la une" (2:59224 Bureau / 2:59358 Mobile) --- */
+.management-highlight-banner {
+  background: var(--gradient-brand);
+  border-radius: 20px;
+  padding: var(--space-24);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-24);
+}
+
+.management-highlight-banner__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-8);
+  flex: 1 0 0;
+  min-width: 1px;
+}
+
+.management-highlight-banner__eyebrow {
+  color: #ddd6ff;
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-highlight-banner__title {
+  color: var(--color-text-on-brand);
+  font-size: 28px;
+  font-weight: var(--weight-extrabold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-highlight-banner__desc {
+  color: #e2deff;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-highlight-banner__cta {
+  background-color: #ffffff;
+  border: 1px solid #e7e8f2;
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-violet);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.management-highlight-banner__cta:hover {
+  background-color: #f8f6ff;
+}
+
+/* --- Grille des 4 Chiffres clés / KPI (2:59231 Bureau / 2:59365 Mobile) --- */
+.management-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-16);
+  width: 100%;
+}
+
+.management-kpi-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-18);
+  min-width: 1px;
+  text-decoration: none;
+}
+
+.management-kpi-card--link:hover {
+  border-color: var(--color-violet);
+}
+
+.management-kpi-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.management-kpi-card__label {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-kpi-card__icon {
+  width: var(--icon-size-base);
+  height: var(--icon-size-base);
+  color: var(--color-violet);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.management-kpi-card__value {
+  color: var(--color-text-primary);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-extrabold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-kpi-card__note {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+/* --- Activité du bureau : Grille 2 colonnes (2:59256 Bureau / 2:59390 Mobile) --- */
+.management-activity-grid {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-24);
+  width: 100%;
+}
+
+.management-activity-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-24);
+  flex: 1 0 0;
+  min-width: 1px;
+}
+
+.management-activity-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-24);
+  width: 350px;
+  flex-shrink: 0;
+}
+
+.management-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-24);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-18);
+}
+
+.management-card__title {
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+/* --- Liste "Les prochaines rencontres" (2:59258) --- */
+.management-meeting-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-decoration: none;
+}
+
+.management-meeting-row__date {
+  background-color: var(--color-violet-soft);
+  color: var(--color-violet);
+  border-radius: var(--radius-control);
+  padding: var(--space-8);
+  width: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.management-meeting-row__day {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-extrabold);
+  line-height: var(--line-height-base);
+}
+
+.management-meeting-row__month {
+  font-size: 8px;
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+}
+
+.management-meeting-row__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex: 1 0 0;
+  min-width: 1px;
+}
+
+.management-meeting-row__title {
+  color: var(--color-text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-meeting-row:hover .management-meeting-row__title {
+  color: var(--color-violet);
+}
+
+.management-meeting-row__meta {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-meeting-row__arrow {
+  width: var(--icon-size-base);
+  height: var(--icon-size-base);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.management-meeting-row:hover .management-meeting-row__arrow {
+  color: var(--color-violet);
+}
+
+/* --- Liste "Dernières demandes" (2:59284) --- */
+.management-request-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.management-request-row__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-violet-soft);
+  color: var(--color-violet);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.management-request-row__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  flex: 1 0 0;
+  min-width: 1px;
+}
+
+.management-request-row__name {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-request-row__date {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+/* --- Badges de statut métier --- */
+.management-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: var(--radius-badge);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.management-status-badge--pending {
+  background-color: var(--color-warning-soft);
+  color: var(--color-warning);
+}
+
+.management-status-badge--accepted {
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.management-status-badge--refused {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+/* --- Carte "Cap sur novembre" (2:59313) --- */
+.management-goal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-12);
+  width: 100%;
+  font-size: var(--text-sm);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-goal-header__label {
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-regular);
+}
+
+.management-goal-header__value {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-bold);
+}
+
+.management-goal-track {
+  background-color: var(--color-violet-soft);
+  border-radius: 8px;
+  height: 8px;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+}
+
+.management-goal-fill {
+  background: var(--gradient-brand);
+  border-radius: 8px;
+  height: 8px;
+  transition: width 0.25s ease;
+}
+
+.management-goal-summary {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+/* --- Carte "Le fil du bureau" (2:59321) --- */
+.management-feed-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+}
+
+.management-feed-item__time {
+  color: var(--color-violet);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-feed-item__text {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+/* --- Responsive Tablette & Mobile (2:59333 & 2:59640) --- */
+@media (max-width: 1200px) {
+  .management-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .management-activity-grid {
+    flex-direction: column;
+  }
+
+  .management-activity-main,
+  .management-activity-aside {
+    width: 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  .management-page-header__title {
+    font-size: 26px;
+  }
+
+  .management-page-header__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .management-highlight-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .management-highlight-banner__title {
+    font-size: 23px;
+  }
+
+  .management-highlight-banner__cta {
+    width: 100%;
+  }
+
+  .management-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .management-meeting-row__arrow {
+    display: none;
+  }
+}

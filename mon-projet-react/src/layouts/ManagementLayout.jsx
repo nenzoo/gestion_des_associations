@@ -299,10 +299,9 @@ function ManagementLayout() {
 
   const basePath = location.pathname.startsWith('/secretaire')
     ? '/secretaire'
-    : location.pathname.startsWith('/president/') ||
-      location.pathname === '/president'
-    ? '/president'
-    : '/presidente';
+    : location.pathname.startsWith('/presidente')
+    ? '/presidente'
+    : '/president';
 
   const pendingCount = readPendingRequestsCount();
   const sidebarItems = buildSidebarItems(basePath, roleLabel, pendingCount);

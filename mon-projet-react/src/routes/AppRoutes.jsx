@@ -14,6 +14,7 @@ import StudentProfilePage from '../pages/student/StudentProfilePage';
 import StudentSecurityPage from '../pages/student/StudentSecurityPage';
 import StudentRegistrationsPage from '../pages/student/StudentRegistrationsPage';
 import StudentEventsPage from '../pages/student/StudentEventsPage';
+import ManagementDashboardPage from '../pages/president/ManagementDashboardPage';
 
 function ManagementRoutePlaceholder({ eyebrow, title, subtitle }) {
   return (
@@ -42,16 +43,7 @@ function renderManagementChildRoutes({ includeTreasury = false }) {
   return (
     <>
       <Route index element={<Navigate to="dashboard" replace />} />
-      <Route
-        path="dashboard"
-        element={
-          <ManagementRoutePlaceholder
-            eyebrow="ESPACE PRÉSIDENCE · SECRÉTARIAT"
-            title="Vue d’ensemble"
-            subtitle="Dimanche 8 novembre 2026 · Une belle semaine se prépare chez Agora."
-          />
-        }
-      />
+      <Route path="dashboard" element={<ManagementDashboardPage />} />
       <Route
         path="demandes"
         element={

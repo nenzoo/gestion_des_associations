@@ -37,7 +37,7 @@ const TEST_STUDENT_PROFILES = [
 
 function getDefaultRouteForRole(role) {
   if (role === ROLES.PRESIDENT) {
-    return '/presidente/dashboard';
+    return '/president/dashboard';
   }
   if (role === ROLES.SECRETARY) {
     return '/secretaire/dashboard';

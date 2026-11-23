@@ -1764,7 +1764,7 @@ export function getManagementDashboardOverview({
       target: annualGoal,
       percentage: progressPercentage,
       remainingToGoal,
-      summaryText: `${progressPercentage} % de l’objectif annuel. Encore ${remainingToGoal} belles rencontres à créer.`,
+      summaryText: `${progressPercentage} % de l’objectif annuel. Encore ${remainingToGoal} membres pour atteindre l’objectif annuel.`,
     },
     boardActivityFeed: getBoardActivityFeedStore().slice(0, 3),
   };

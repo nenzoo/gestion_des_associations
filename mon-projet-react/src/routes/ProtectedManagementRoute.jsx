@@ -40,7 +40,7 @@ function ProtectedManagementRoute({
       return <Navigate to="/secretaire/dashboard" replace />;
     }
     if (user.role === ROLES.PRESIDENT) {
-      return <Navigate to="/presidente/dashboard" replace />;
+      return <Navigate to="/president/dashboard" replace />;
     }
     return <Navigate to="/" replace />;
   }
