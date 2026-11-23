@@ -17,11 +17,20 @@ function ProtectedStudentRoute({ children }) {
     return <Navigate to="/connexion" state={{ from: location }} replace />;
   }
 
-  if (user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE) {
+  if (
+    user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE ||
+    user.membershipAccessStatus === 'REVOQUEE'
+  ) {
     return (
       <Navigate
         to="/adhesion/envoyee"
-        state={{ from: location, status: user.membershipStatus }}
+        state={{
+          from: location,
+          status:
+            user.membershipAccessStatus === 'REVOQUEE'
+              ? 'REVOQUEE'
+              : user.membershipStatus,
+        }}
         replace
       />
     );

@@ -31,6 +31,31 @@ const STUDENT_PROFILES_STORAGE_KEY = 'clubmanager_student_profiles';
 const STUDENT_REGISTRATIONS_STORAGE_KEY = 'clubmanager_student_registrations';
 const EVENT_SEATS_STORAGE_KEY = 'clubmanager_event_seats';
 const PASSWORD_HASHES_STORAGE_KEY = 'clubmanager_student_password_hashes';
+const MANAGEMENT_EVENTS_STORAGE_KEY = 'clubmanager_management_events';
+const MANAGEMENT_ANNOUNCEMENTS_STORAGE_KEY =
+  'clubmanager_management_announcements';
+
+function getActivePublishedEventsSource() {
+  const stored = readStorageJson(MANAGEMENT_EVENTS_STORAGE_KEY, null);
+  if (Array.isArray(stored) && stored.length > 0) {
+    return stored.filter(
+      (evt) =>
+        evt &&
+        typeof evt === 'object' &&
+        evt.id &&
+        evt.publicationStatus === 'Publié'
+    );
+  }
+  return PUBLIC_EVENTS;
+}
+
+function getActiveAnnouncementsSource() {
+  const stored = readStorageJson(MANAGEMENT_ANNOUNCEMENTS_STORAGE_KEY, null);
+  if (Array.isArray(stored) && stored.length > 0) {
+    return stored.filter((ann) => ann && typeof ann === 'object' && ann.id);
+  }
+  return PUBLIC_ANNOUNCEMENTS;
+}
 
 /**
  * Empreinte déterministe (non réversible / sans texte en clair) permettant de
@@ -143,7 +168,7 @@ function saveRegistrationsStore(store) {
 
 function getInitialEventSeatsMap() {
   const map = {};
-  PUBLIC_EVENTS.forEach((evt) => {
+  getActivePublishedEventsSource().forEach((evt) => {
     map[evt.id] = evt.remainingSeats;
   });
   return map;
@@ -155,7 +180,9 @@ function getInitialEventSeatsMap() {
  * `INITIAL_REGISTRATIONS_BY_USER` (afin qu'une annulation ne dépasse jamais la capacité totale).
  */
 function getMaxSeatsForEvent(eventId) {
-  const targetEvent = PUBLIC_EVENTS.find((evt) => evt.id === eventId);
+  const targetEvent =
+    getActivePublishedEventsSource().find((evt) => evt.id === eventId) ||
+    PUBLIC_EVENTS.find((evt) => evt.id === eventId);
   if (!targetEvent) {
     return 0;
   }
@@ -166,7 +193,14 @@ function getMaxSeatsForEvent(eventId) {
       acc + (Array.isArray(list) && list.includes(eventId) ? 1 : 0),
     0
   );
-  return targetEvent.remainingSeats + initialRegisteredCount;
+  const baseCapacity = targetEvent.remainingSeats + initialRegisteredCount;
+  if (
+    Number.isFinite(Number(targetEvent.totalCapacity)) &&
+    Number(targetEvent.totalCapacity) > 0
+  ) {
+    return Math.max(baseCapacity, Math.trunc(Number(targetEvent.totalCapacity)));
+  }
+  return baseCapacity;
 }
 
 function clampEventSeats(eventId, rawValue, fallbackSeats) {
@@ -182,7 +216,10 @@ function clampEventSeats(eventId, rawValue, fallbackSeats) {
  * Vérifie si l'annulation est fermée (moins de 24 h avant le début de l'événement).
  */
 function isEventCancellationClosed(eventId, referenceNowMs = Date.now()) {
-  const startIso = EVENT_START_DATES_BY_ID[eventId];
+  const dynamicEvent = getActivePublishedEventsSource().find(
+    (evt) => evt.id === eventId
+  );
+  const startIso = dynamicEvent?.startIso || EVENT_START_DATES_BY_ID[eventId];
   if (!startIso) {
     return false;
   }
@@ -195,6 +232,7 @@ function isEventCancellationClosed(eventId, referenceNowMs = Date.now()) {
 }
 
 function getEventSeatsStore() {
+  const activeEvents = getActivePublishedEventsSource();
   const initialMap = getInitialEventSeatsMap();
   const stored = readStorageJson(EVENT_SEATS_STORAGE_KEY, null);
   if (!stored || typeof stored !== 'object') {
@@ -202,7 +240,7 @@ function getEventSeatsStore() {
   }
 
   const sanitizedMap = { ...initialMap };
-  PUBLIC_EVENTS.forEach((evt) => {
+  activeEvents.forEach((evt) => {
     if (stored[evt.id] !== undefined) {
       sanitizedMap[evt.id] = clampEventSeats(
         evt.id,
@@ -504,40 +542,45 @@ export function getEventsWithRegistrationState({
   category = 'all',
   search = '',
 } = {}) {
+  const activeEvents = getActivePublishedEventsSource();
   const seatsStore = getEventSeatsStore();
   const registeredIds = new Set(getRegisteredEventIdsForCurrentUser());
   const normalizedSearch = search.trim().toLowerCase();
 
-  return PUBLIC_EVENTS.map((event) => {
-    const currentRemainingSeats =
-      seatsStore[event.id] !== undefined
-        ? seatsStore[event.id]
-        : event.remainingSeats;
-    const isRegistered = registeredIds.has(event.id);
-    const isCancelled = Boolean(event.status === 'ANNULE' || event.isCancelled);
-    const isFull = currentRemainingSeats <= 0;
-    const isCancellationClosed = isEventCancellationClosed(event.id);
+  return activeEvents
+    .map((event) => {
+      const currentRemainingSeats =
+        seatsStore[event.id] !== undefined
+          ? seatsStore[event.id]
+          : event.remainingSeats;
+      const isRegistered = registeredIds.has(event.id);
+      const isCancelled = Boolean(
+        event.status === 'ANNULE' || event.isCancelled
+      );
+      const isFull = currentRemainingSeats <= 0;
+      const isCancellationClosed = isEventCancellationClosed(event.id);
 
-    return {
-      ...event,
-      remainingSeats: currentRemainingSeats,
-      remainingSeatsText: formatRemainingSeatsText(currentRemainingSeats),
-      isRegistered,
-      isCancelled,
-      isFull,
-      isCancellationClosed,
-      confirmedBadgeLabel: STUDENT_REGISTRATION_LABELS.confirmedBadge,
-    };
-  }).filter((event) => {
-    const matchesCategory = category === 'all' || event.category === category;
-    const matchesSearch =
-      !normalizedSearch ||
-      event.title.toLowerCase().includes(normalizedSearch) ||
-      event.location.toLowerCase().includes(normalizedSearch) ||
-      event.category.toLowerCase().includes(normalizedSearch);
+      return {
+        ...event,
+        remainingSeats: currentRemainingSeats,
+        remainingSeatsText: formatRemainingSeatsText(currentRemainingSeats),
+        isRegistered,
+        isCancelled,
+        isFull,
+        isCancellationClosed,
+        confirmedBadgeLabel: STUDENT_REGISTRATION_LABELS.confirmedBadge,
+      };
+    })
+    .filter((event) => {
+      const matchesCategory = category === 'all' || event.category === category;
+      const matchesSearch =
+        !normalizedSearch ||
+        event.title.toLowerCase().includes(normalizedSearch) ||
+        event.location.toLowerCase().includes(normalizedSearch) ||
+        event.category.toLowerCase().includes(normalizedSearch);
 
-    return matchesCategory && matchesSearch;
-  });
+      return matchesCategory && matchesSearch;
+    });
 }
 
 /**
@@ -575,15 +618,20 @@ export function registerForEvent(eventId) {
     };
   }
 
-  if (sessionUser.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE) {
+  if (
+    sessionUser.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE ||
+    sessionUser.membershipAccessStatus === 'REVOQUEE'
+  ) {
     return {
       ok: false,
       error:
-        'Seuls les membres au statut ACCEPTEE peuvent s’inscrire aux événements.',
+        'Seuls les membres actifs au statut ACCEPTEE peuvent s’inscrire aux événements.',
     };
   }
 
-  const targetEvent = PUBLIC_EVENTS.find((evt) => evt.id === eventId);
+  const targetEvent =
+    getActivePublishedEventsSource().find((evt) => evt.id === eventId) ||
+    PUBLIC_EVENTS.find((evt) => evt.id === eventId);
   if (!targetEvent) {
     return {
       ok: false,
@@ -657,15 +705,20 @@ export function cancelEventRegistration(eventId, options = {}) {
     };
   }
 
-  if (sessionUser.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE) {
+  if (
+    sessionUser.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE ||
+    sessionUser.membershipAccessStatus === 'REVOQUEE'
+  ) {
     return {
       ok: false,
       error:
-        'Seuls les membres au statut ACCEPTEE peuvent gérer leurs inscriptions.',
+        'Seuls les membres actifs au statut ACCEPTEE peuvent gérer leurs inscriptions.',
     };
   }
 
-  const targetEvent = PUBLIC_EVENTS.find((evt) => evt.id === eventId);
+  const targetEvent =
+    getActivePublishedEventsSource().find((evt) => evt.id === eventId) ||
+    PUBLIC_EVENTS.find((evt) => evt.id === eventId);
   if (!targetEvent) {
     return {
       ok: false,
@@ -737,7 +790,7 @@ export function getStudentEventCategories() {
 }
 
 export function getStudentAnnouncements() {
-  return PUBLIC_ANNOUNCEMENTS;
+  return getActiveAnnouncementsSource();
 }
 
 export function getSynchronizedEventSeats(eventId, fallbackSeats = 0) {

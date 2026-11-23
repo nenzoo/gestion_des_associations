@@ -70,11 +70,20 @@ function LoginPage() {
     }
 
     // Règle fondamentale §4 : Si la demande d'adhésion est EN_ATTENTE ou REFUSEE,
-    // l'étudiant consulte le statut de sa demande sans accéder à l'espace membre.
-    if (result.user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE) {
+    // ou si l'accès membre a été révoqué (membershipAccessStatus === 'REVOQUEE'),
+    // l'étudiant consulte le statut de son dossier sans accéder à l'espace membre.
+    if (
+      result.user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE ||
+      result.user.membershipAccessStatus === 'REVOQUEE'
+    ) {
       navigate('/adhesion/envoyee', {
         replace: true,
-        state: { status: result.user.membershipStatus },
+        state: {
+          status:
+            result.user.membershipAccessStatus === 'REVOQUEE'
+              ? 'REVOQUEE'
+              : result.user.membershipStatus,
+        },
       });
       return;
     }

@@ -14,6 +14,8 @@ function MembershipSentPage() {
   const status =
     location.state?.status || request?.status || MEMBERSHIP_STATUS.EN_ATTENTE;
   const isRefused = status === MEMBERSHIP_STATUS.REFUSEE;
+  const isRevoked = status === 'REVOQUEE';
+  const isDenied = isRefused || isRevoked;
 
   return (
     <AuthSplitShell>
@@ -27,21 +29,25 @@ function MembershipSentPage() {
           />
         </div>
         <h2 className="auth-intro__title">
-          {isRefused
+          {isRevoked
+            ? `Accès membre révoqué, ${firstName}`
+            : isRefused
             ? `Demande non retenue, ${firstName}`
             : `C’est envoyé, ${firstName} !`}
         </h2>
         <p className="auth-intro__subtitle">
-          {isRefused
+          {isRevoked
+            ? 'Ton accès à l’espace membre a été retiré par le bureau. Contacte l’association pour plus d’informations.'
+            : isRefused
             ? 'Ta demande d’adhésion n’a pas pu être validée par le bureau. L’accès à l’espace membre n’est pas disponible.'
             : 'Ta demande d’adhésion a bien été reçue. On a hâte de te rencontrer.'}
         </p>
       </div>
 
-      {/* Badge de statut EN_ATTENTE ou REFUSEE (2:58340 & 2:58376) */}
+      {/* Badge de statut EN_ATTENTE, REFUSEE ou REVOQUEE (2:58340 & 2:58376) */}
       <span
         className={`auth-status-badge ${
-          isRefused
+          isDenied
             ? 'auth-status-badge--refused'
             : 'auth-status-badge--pending'
         }`}
@@ -75,12 +81,12 @@ function MembershipSentPage() {
       </div>
 
       {/* Message de retour (2:58352 & 2:58388) */}
-      {isRefused ? (
+      {isDenied ? (
         <div className="auth-banner auth-banner--error" role="status">
           <img src={infoIcon} alt="" className="auth-banner__icon" />
           <p className="auth-banner__text">
-            Statut du dossier associé à {email} : {status}. Seuls les membres au
-            statut ACCEPTEE peuvent accéder à l’espace étudiant.
+            Statut du dossier associé à {email} : {status}. Seuls les membres
+            actifs au statut ACCEPTEE peuvent accéder à l’espace étudiant.
           </p>
         </div>
       ) : (

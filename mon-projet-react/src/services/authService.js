@@ -18,6 +18,26 @@ import {
 
 const SESSION_STORAGE_KEY = 'clubmanager_current_user';
 const LATEST_REQUEST_STORAGE_KEY = 'clubmanager_latest_membership_request';
+const USER_STATUS_OVERRIDES_STORAGE_KEY = 'clubmanager_user_status_overrides';
+
+function readUserStatusOverride(email) {
+  const cleanEmail = String(email || '')
+    .trim()
+    .toLowerCase();
+  if (!cleanEmail) {
+    return null;
+  }
+  const overrides = readStorageJson(USER_STATUS_OVERRIDES_STORAGE_KEY, null);
+  if (
+    overrides &&
+    typeof overrides === 'object' &&
+    !Array.isArray(overrides) &&
+    overrides[cleanEmail]
+  ) {
+    return overrides[cleanEmail];
+  }
+  return null;
+}
 
 let membershipRequestsStore = [...INITIAL_MEMBERSHIP_REQUESTS];
 let latestSubmittedRequest = readStorageJson(
@@ -87,14 +107,18 @@ export function getLatestMembershipRequest() {
   if (
     user &&
     (user.membershipStatus === MEMBERSHIP_STATUS.EN_ATTENTE ||
-      user.membershipStatus === MEMBERSHIP_STATUS.REFUSEE)
+      user.membershipStatus === MEMBERSHIP_STATUS.REFUSEE ||
+      user.membershipAccessStatus === 'REVOQUEE')
   ) {
     return {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
       studentNumber: user.studentNumber || '22610890',
-      status: user.membershipStatus,
+      status:
+        user.membershipAccessStatus === 'REVOQUEE'
+          ? 'REVOQUEE'
+          : user.membershipStatus,
     };
   }
   return latestSubmittedRequest;
@@ -139,18 +163,31 @@ export function loginWithCredentials({ email, password }) {
     };
   }
 
+  // Appliquer toute décision ou révocation prise dans l'espace Gestion (Présidence / Secrétariat)
+  const statusOverride = readUserStatusOverride(cleanEmail);
+  if (statusOverride) {
+    currentSessionUser = {
+      ...currentSessionUser,
+      ...statusOverride,
+    };
+  }
+
   writeStorageJson(SESSION_STORAGE_KEY, currentSessionUser);
 
   if (
     currentSessionUser.membershipStatus === MEMBERSHIP_STATUS.EN_ATTENTE ||
-    currentSessionUser.membershipStatus === MEMBERSHIP_STATUS.REFUSEE
+    currentSessionUser.membershipStatus === MEMBERSHIP_STATUS.REFUSEE ||
+    currentSessionUser.membershipAccessStatus === 'REVOQUEE'
   ) {
     latestSubmittedRequest = {
       firstName: currentSessionUser.firstName,
       lastName: currentSessionUser.lastName,
       email: currentSessionUser.email,
       studentNumber: currentSessionUser.studentNumber || '22610890',
-      status: currentSessionUser.membershipStatus,
+      status:
+        currentSessionUser.membershipAccessStatus === 'REVOQUEE'
+          ? 'REVOQUEE'
+          : currentSessionUser.membershipStatus,
     };
     writeStorageJson(LATEST_REQUEST_STORAGE_KEY, latestSubmittedRequest);
   }
@@ -169,8 +206,17 @@ export function loginWithCredentials({ email, password }) {
  * Source de vérité unique pour la session utilisateur courante.
  */
 export function getCurrentUser() {
-  if (!currentSessionUser) {
-    currentSessionUser = readStorageJson(SESSION_STORAGE_KEY, null);
+  const storedUser = readStorageJson(SESSION_STORAGE_KEY, null);
+  currentSessionUser = storedUser || currentSessionUser;
+
+  if (currentSessionUser && currentSessionUser.email) {
+    const statusOverride = readUserStatusOverride(currentSessionUser.email);
+    if (statusOverride) {
+      currentSessionUser = {
+        ...currentSessionUser,
+        ...statusOverride,
+      };
+    }
   }
   return currentSessionUser;
 }
