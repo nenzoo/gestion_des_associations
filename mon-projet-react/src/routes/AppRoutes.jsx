@@ -1,7 +1,10 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { ROLES } from '../data/authMockData';
 import PublicLayout from '../layouts/PublicLayout';
 import StudentLayout from '../layouts/StudentLayout';
+import ManagementLayout from '../layouts/ManagementLayout';
 import ProtectedStudentRoute from './ProtectedStudentRoute';
+import ProtectedManagementRoute from './ProtectedManagementRoute';
 import HomePage from '../pages/public/HomePage';
 import PublicCatalogPage from '../pages/public/PublicCatalogPage';
 import LoginPage from '../pages/auth/LoginPage';
@@ -11,6 +14,99 @@ import StudentProfilePage from '../pages/student/StudentProfilePage';
 import StudentSecurityPage from '../pages/student/StudentSecurityPage';
 import StudentRegistrationsPage from '../pages/student/StudentRegistrationsPage';
 import StudentEventsPage from '../pages/student/StudentEventsPage';
+
+function ManagementRoutePlaceholder({ eyebrow, title, subtitle }) {
+  return (
+    <>
+      <div className="student-page-header">
+        <p className="student-page-header__eyebrow">{eyebrow}</p>
+        <div className="student-page-header__row">
+          <div className="student-page-header__intro">
+            <h1 className="student-page-header__title">{title}</h1>
+            <p className="student-page-header__subtitle">{subtitle}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="student-placeholder-card">
+        <h2 className="student-placeholder-card__title">{title}</h2>
+        <p className="student-placeholder-card__text">
+          Vue de l’espace gestion prête à être implémentée dans la tâche dédiée.
+        </p>
+      </div>
+    </>
+  );
+}
+
+function renderManagementChildRoutes({ includeTreasury = false }) {
+  return (
+    <>
+      <Route index element={<Navigate to="dashboard" replace />} />
+      <Route
+        path="dashboard"
+        element={
+          <ManagementRoutePlaceholder
+            eyebrow="ESPACE PRÉSIDENCE · SECRÉTARIAT"
+            title="Vue d’ensemble"
+            subtitle="Dimanche 8 novembre 2026 · Une belle semaine se prépare chez Agora."
+          />
+        }
+      />
+      <Route
+        path="demandes"
+        element={
+          <ManagementRoutePlaceholder
+            eyebrow="DEMANDES D’ADHÉSION"
+            title="Chaque rencontre commence ici."
+            subtitle="Vérifiez les demandes et ouvrez la porte aux nouveaux membres."
+          />
+        }
+      />
+      <Route
+        path="membres"
+        element={
+          <ManagementRoutePlaceholder
+            eyebrow="ANNUAIRE DES MEMBRES"
+            title="Une communauté qui grandit."
+            subtitle="248 membres actifs · Année universitaire 2026–2027"
+          />
+        }
+      />
+      <Route
+        path="evenements"
+        element={
+          <ManagementRoutePlaceholder
+            eyebrow="GESTION DES ÉVÉNEMENTS"
+            title="Des moments à faire vivre."
+            subtitle="Créez les prochains rendez-vous et suivez les inscriptions."
+          />
+        }
+      />
+      <Route
+        path="annonces"
+        element={
+          <ManagementRoutePlaceholder
+            eyebrow="GESTION DES ANNONCES"
+            title="La voix de votre association."
+            subtitle="Partagez les infos qui font vivre le campus."
+          />
+        }
+      />
+      {includeTreasury && (
+        <Route
+          path="tresorerie"
+          element={
+            <ManagementRoutePlaceholder
+              eyebrow="TRÉSORERIE · LECTURE SEULE"
+              title="Trésorerie de l’association"
+              subtitle="Consultation en lecture seule du solde et des transactions (Jour 4)."
+            />
+          }
+        />
+      )}
+    </>
+  );
+}
 
 function AppRoutes() {
   return (
@@ -41,6 +137,43 @@ function AppRoutes() {
         <Route path="securite" element={<StudentSecurityPage />} />
         <Route path="inscriptions" element={<StudentRegistrationsPage />} />
         <Route path="evenements" element={<StudentEventsPage />} />
+      </Route>
+
+      {/* Espace Présidence protégé (rôle Présidente requis) */}
+      <Route
+        path="/presidente"
+        element={
+          <ProtectedManagementRoute allowedRoles={[ROLES.PRESIDENT]}>
+            <ManagementLayout />
+          </ProtectedManagementRoute>
+        }
+      >
+        {renderManagementChildRoutes({ includeTreasury: true })}
+      </Route>
+
+      <Route
+        path="/president"
+        element={
+          <ProtectedManagementRoute allowedRoles={[ROLES.PRESIDENT]}>
+            <ManagementLayout />
+          </ProtectedManagementRoute>
+        }
+      >
+        {renderManagementChildRoutes({ includeTreasury: true })}
+      </Route>
+
+      {/* Espace Secrétariat protégé (rôle Secrétaire ou Présidente) */}
+      <Route
+        path="/secretaire"
+        element={
+          <ProtectedManagementRoute
+            allowedRoles={[ROLES.SECRETARY, ROLES.PRESIDENT]}
+          >
+            <ManagementLayout />
+          </ProtectedManagementRoute>
+        }
+      >
+        {renderManagementChildRoutes({ includeTreasury: false })}
       </Route>
 
       {/* Redirection par défaut vers l'accueil */}

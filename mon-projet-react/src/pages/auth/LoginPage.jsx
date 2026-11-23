@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AuthSplitShell from './AuthSplitShell';
-import { MEMBERSHIP_STATUS } from '../../data/authMockData';
+import { MEMBERSHIP_STATUS, ROLES } from '../../data/authMockData';
 import {
   getInitialLoginForm,
   loginWithCredentials,
@@ -25,7 +25,25 @@ const TEST_STUDENT_PROFILES = [
     label: 'Étudiant test (REFUSEE)',
     email: 'etudiant.refuse@univ-lyon2.fr',
   },
+  {
+    label: 'Emma Martin (Présidente)',
+    email: 'emma.martin@univ-lyon2.fr',
+  },
+  {
+    label: 'Léa Moreau (Secrétaire)',
+    email: 'lea.moreau@univ-lyon2.fr',
+  },
 ];
+
+function getDefaultRouteForRole(role) {
+  if (role === ROLES.PRESIDENT) {
+    return '/presidente/dashboard';
+  }
+  if (role === ROLES.SECRETARY) {
+    return '/secretaire/dashboard';
+  }
+  return '/etudiant/profil';
+}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -61,7 +79,27 @@ function LoginPage() {
       return;
     }
 
-    const destination = location.state?.from?.pathname || '/etudiant/profil';
+    const defaultDestination = getDefaultRouteForRole(result.user.role);
+    const requestedPath = location.state?.from?.pathname;
+
+    // Éviter de rediriger un membre du bureau vers /etudiant/* ou un étudiant vers /presidente/*
+    let destination = defaultDestination;
+    if (requestedPath) {
+      const isStudentPath = requestedPath.startsWith('/etudiant');
+      const isPresidentPath =
+        requestedPath.startsWith('/presidente') ||
+        requestedPath.startsWith('/president');
+      const isSecretaryPath = requestedPath.startsWith('/secretaire');
+
+      if (
+        (result.user.role === ROLES.STUDENT && isStudentPath) ||
+        (result.user.role === ROLES.PRESIDENT && isPresidentPath) ||
+        (result.user.role === ROLES.SECRETARY && isSecretaryPath)
+      ) {
+        destination = requestedPath;
+      }
+    }
+
     navigate(destination, { replace: true });
   };
 
@@ -79,10 +117,10 @@ function LoginPage() {
         </p>
       </div>
 
-      {/* Sélecteur des 3 profils étudiants fictifs validés (Point 3) */}
+      {/* Sélecteur des profils fictifs de test (Étudiants, Présidente, Secrétaire) */}
       <div className="auth-demo-profiles">
         <span className="auth-demo-profiles__title">
-          PROFILS DE TEST ÉTUDIANTS
+          PROFILS DE TEST (ÉTUDIANTS &amp; BUREAU)
         </span>
         <div className="auth-demo-profiles__list">
           {TEST_STUDENT_PROFILES.map((profile) => {
