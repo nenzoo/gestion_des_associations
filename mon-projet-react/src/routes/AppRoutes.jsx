@@ -15,6 +15,8 @@ import StudentSecurityPage from '../pages/student/StudentSecurityPage';
 import StudentRegistrationsPage from '../pages/student/StudentRegistrationsPage';
 import StudentEventsPage from '../pages/student/StudentEventsPage';
 import ManagementDashboardPage from '../pages/president/ManagementDashboardPage';
+import ManagementRequestsPage from '../pages/president/ManagementRequestsPage';
+import ManagementMembersPage from '../pages/president/ManagementMembersPage';
 
 function ManagementRoutePlaceholder({ eyebrow, title, subtitle }) {
   return (
@@ -44,26 +46,8 @@ function renderManagementChildRoutes({ includeTreasury = false }) {
     <>
       <Route index element={<Navigate to="dashboard" replace />} />
       <Route path="dashboard" element={<ManagementDashboardPage />} />
-      <Route
-        path="demandes"
-        element={
-          <ManagementRoutePlaceholder
-            eyebrow="DEMANDES D’ADHÉSION"
-            title="Chaque rencontre commence ici."
-            subtitle="Vérifiez les demandes et ouvrez la porte aux nouveaux membres."
-          />
-        }
-      />
-      <Route
-        path="membres"
-        element={
-          <ManagementRoutePlaceholder
-            eyebrow="ANNUAIRE DES MEMBRES"
-            title="Une communauté qui grandit."
-            subtitle="248 membres actifs · Année universitaire 2026–2027"
-          />
-        }
-      />
+      <Route path="demandes" element={<ManagementRequestsPage />} />
+      <Route path="membres" element={<ManagementMembersPage />} />
       <Route
         path="evenements"
         element={

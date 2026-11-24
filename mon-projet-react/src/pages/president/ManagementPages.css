@@ -569,3 +569,707 @@
     display: none;
   }
 }
+
+/* ==========================================================================
+   Pages Demandes d’adhésion (2:59784 / 2:59934) & Membres (2:60049 / 2:60188)
+   + Dialogues de décision (2:61968 : 2:61977, 2:61994, 2:62015)
+   ========================================================================== */
+
+/* --- Bouton d'en-tête secondaire (ex: Exporter la liste 2:60100) --- */
+.management-btn-outline {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  color: var(--color-violet);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.management-btn-outline:hover {
+  border-color: var(--color-violet);
+  background-color: var(--color-violet-soft);
+}
+
+.management-btn-outline__icon {
+  width: var(--icon-size-sm);
+  height: var(--icon-size-sm);
+  display: block;
+  flex-shrink: 0;
+}
+
+/* --- Onglets de filtrage (2:59832 Bureau / 2:59956 Mobile) --- */
+.management-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.management-tab {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-sm);
+  padding: 7px var(--space-12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-violet);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.management-tab:hover {
+  border-color: var(--color-violet);
+}
+
+.management-tab--active {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  color: var(--color-text-on-brand);
+}
+
+/* --- Bandeau d'information et message de retour (2:59839 / 2:59963) --- */
+.management-info-banner {
+  background-color: var(--color-violet-soft);
+  border-radius: var(--radius-input);
+  padding: 14px;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.management-info-banner__icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-violet);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.management-info-banner__text {
+  color: var(--color-violet);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  flex: 1 0 0;
+  min-width: 1px;
+}
+
+.management-feedback-banner {
+  background-color: var(--color-success-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  padding: 12px 14px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  color: var(--color-success);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.management-feedback-banner__close {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+/* --- Barre de recherche et filtres (2:59842 / 2:60103) --- */
+.management-toolbar {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.management-search-box {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: 12px 13px;
+  width: 360px;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.management-search-box:focus-within {
+  border-color: var(--color-violet);
+}
+
+.management-search-box__icon {
+  width: 17px;
+  height: 17px;
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.management-search-box__input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+  min-width: 1px;
+}
+
+.management-search-box__input::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.management-filter-btn {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  color: var(--color-violet);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.management-filter-btn:hover {
+  border-color: var(--color-violet);
+}
+
+.management-filter-select {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  color: var(--color-violet);
+  font-family: inherit;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  cursor: pointer;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.management-filter-select:focus {
+  border-color: var(--color-violet);
+}
+
+/* --- Tableaux Desktop (2:59848, 2:59913, 2:60109) --- */
+.management-table {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.management-table__head {
+  background-color: var(--color-surface-subtle);
+  padding: var(--space-16);
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-height-base);
+}
+
+.management-table__col {
+  flex: 1 0 0;
+  min-width: 1px;
+}
+
+.management-table__row {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-16);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.management-table__cell {
+  flex: 1 0 0;
+  min-width: 1px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.management-table__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+}
+
+.management-table__primary-text {
+  color: var(--color-text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-table__semi-text {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-table__secondary-text {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-table__text {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+}
+
+.management-table__muted {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+}
+
+.management-table__empty {
+  border-top: 1px solid var(--color-border);
+  padding: var(--space-24);
+  width: 100%;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* --- Actions de ligne (Accepter / Refuser / Révoquer) --- */
+.management-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.management-action-btn {
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-sm);
+  padding: 7px var(--space-12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.management-action-btn--accept {
+  background: var(--gradient-brand);
+  color: var(--color-text-on-brand);
+}
+
+.management-action-btn--accept:hover {
+  opacity: 0.95;
+}
+
+.management-action-btn--danger {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+.management-action-btn--danger:hover {
+  opacity: 0.92;
+}
+
+/* --- Puce de rôle (Membre / Secrétaire / Trésorier / Présidente) --- */
+.management-role-pill {
+  background-color: var(--color-violet-soft);
+  color: var(--color-violet);
+  border-radius: var(--radius-pill);
+  padding: 5px 10px;
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* --- Liste de cartes Mobile (2:59972, 2:60022, 2:60219) --- */
+.management-mobile-list {
+  display: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.management-mobile-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-16);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-16);
+}
+
+.management-mobile-card__title {
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+/* --- Barre de pagination (2:59903 / 2:60176) --- */
+.management-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.management-pagination__info {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-pagination__pages {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+}
+
+.management-page-btn {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-sm);
+  padding: 7px var(--space-12);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-violet);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.management-page-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.management-page-btn--active {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  color: var(--color-text-on-brand);
+}
+
+/* --- Sous-titre de section & note de bas de page (2:59912 / 2:60185) --- */
+.management-section-label {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-footnote {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm-tiny);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+/* --- Dialogues de décision et confirmation (2:61977, 2:61994, 2:62015) --- */
+.management-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background-color: rgba(15, 17, 35, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-20);
+}
+
+.management-modal {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 20px 48px rgba(20, 18, 48, 0.22);
+  padding: var(--space-24);
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-18);
+}
+
+.management-modal__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  width: 100%;
+}
+
+.management-modal__context-badge {
+  background-color: var(--color-violet-soft);
+  color: var(--color-violet);
+  border-radius: var(--radius-badge);
+  padding: 5px 9px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  white-space: nowrap;
+}
+
+.management-modal__close {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-badge);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.management-modal__close:hover {
+  background-color: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.management-modal__symbol {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-input);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.management-modal__symbol--accept {
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
+}
+
+.management-modal__symbol--danger {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+.management-modal__title {
+  color: var(--color-text-primary);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-extrabold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-modal__identity {
+  color: var(--color-text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-modal__desc {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-modal__field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  width: 100%;
+}
+
+.management-modal__label {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-height-base);
+  width: 100%;
+}
+
+.management-modal__textarea {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  padding: 12px 13px;
+  width: 100%;
+  min-height: 96px;
+  resize: vertical;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--line-height-base);
+  outline: none;
+}
+
+.management-modal__textarea:focus {
+  border-color: var(--color-violet);
+}
+
+.management-modal__error {
+  color: var(--color-danger-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  line-height: var(--line-height-base);
+}
+
+.management-modal__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  width: 100%;
+}
+
+.management-modal__submit {
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  cursor: pointer;
+}
+
+.management-modal__submit--accept {
+  background: var(--gradient-brand);
+  color: var(--color-text-on-brand);
+}
+
+.management-modal__submit--danger {
+  background-color: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+.management-modal__cancel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  min-height: var(--control-height-btn);
+  padding: 11px var(--space-18);
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  line-height: var(--line-height-base);
+  cursor: pointer;
+}
+
+.management-modal__cancel:hover {
+  border-color: var(--color-violet);
+  color: var(--color-violet);
+}
+
+/* --- Basculement Tableaux Bureau -> Cartes Mobile (2:59934 & 2:60188) --- */
+@media (max-width: 860px) {
+  .management-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .management-search-box {
+    width: 100%;
+  }
+
+  .management-table {
+    display: none;
+  }
+
+  .management-mobile-list {
+    display: flex;
+  }
+}

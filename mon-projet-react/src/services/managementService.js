@@ -495,6 +495,21 @@ function computeActiveMembersTotalCount() {
   );
 }
 
+function computeAcceptedRequestsTotalCount() {
+  const decisions = getManagementDecisionsStore();
+  const initialAcceptedCount = INITIAL_MEMBERSHIP_DECISIONS.filter(
+    (d) => d.status === MEMBERSHIP_STATUS.ACCEPTEE
+  ).length;
+  const currentAcceptedCount = decisions.filter(
+    (d) => d.status === MEMBERSHIP_STATUS.ACCEPTEE
+  ).length;
+  const delta = currentAcceptedCount - initialAcceptedCount;
+  return Math.max(
+    0,
+    DASHBOARD_REFERENCE_METRICS.baseActiveMembersCount + delta
+  );
+}
+
 function computeRefusedRequestsTotalCount() {
   const decisions = getManagementDecisionsStore();
   const initialRefusedCount = INITIAL_MEMBERSHIP_DECISIONS.filter(
@@ -565,7 +580,7 @@ export function getMembershipRequestsView({
     recentDecisions: decisions,
     counts: {
       pending: pendingRequests.length,
-      accepted: computeActiveMembersTotalCount(),
+      accepted: computeAcceptedRequestsTotalCount(),
       refused: computeRefusedRequestsTotalCount(),
     },
   };
@@ -892,6 +907,7 @@ export function getAssociationMembersView({
   return {
     members: filteredMembers,
     activeCount,
+    revokedCount,
     totalDirectoryCount: activeCount + revokedCount,
     academicYearLabel: DASHBOARD_REFERENCE_METRICS.academicYearLabel,
   };
@@ -945,7 +961,7 @@ export function revokeAssociationMember(
     return {
       ok: false,
       error:
-        'Les comptes du bureau sont gérés par l’administrateur et ne peuvent pas être révoqués ici.',
+        'Les mandats du bureau (Présidence nommée par l’administrateur, Secrétariat et Trésorerie nommés par la présidence) ne peuvent pas être révoqués via cette action.',
     };
   }
 
