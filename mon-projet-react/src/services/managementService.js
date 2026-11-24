@@ -458,10 +458,21 @@ export function getSynchronizedPublishedEvents({
 function getManagedAnnouncementsStore() {
   const stored = readStorageJson(MANAGEMENT_ANNOUNCEMENTS_STORAGE_KEY, null);
   if (Array.isArray(stored) && stored.length > 0) {
-    return stored.filter((item) => item && typeof item === 'object' && item.id);
+    return stored
+      .filter((item) => item && typeof item === 'object' && item.id)
+      .map((ann) => {
+        const bodyText = String(ann.content ?? ann.excerpt ?? '');
+        return {
+          ...ann,
+          content: bodyText,
+          excerpt: bodyText,
+        };
+      });
   }
   return PUBLIC_ANNOUNCEMENTS.map((ann) => ({
     ...ann,
+    content: ann.excerpt,
+    excerpt: ann.excerpt,
     authorName: 'Léa Moreau',
     publicationStatus: ANNOUNCEMENT_PUBLICATION_STATUS.PUBLISHED,
     visibilityNote: 'Visible sur le site public et dans l’espace membre',
@@ -1382,10 +1393,37 @@ export function updateManagedEvent(
       ? Math.trunc(Number(formData.totalCapacity))
       : currentTotalCapacity;
 
-  if (!title || !location) {
+  const dateInput =
+    formData.dateInput !== undefined
+      ? String(formData.dateInput).trim()
+      : currentEvent.dateInput ||
+        (currentEvent.startIso ? String(currentEvent.startIso).slice(0, 10) : '');
+  const timeInput =
+    formData.timeInput !== undefined
+      ? String(formData.timeInput).trim()
+      : currentEvent.timeInput ||
+        (currentEvent.startIso ? String(currentEvent.startIso).slice(11, 16) : '');
+
+  if (publishIfDraft) {
+    if (
+      !title ||
+      !description ||
+      !dateInput ||
+      !timeInput ||
+      !location ||
+      !category
+    ) {
+      return {
+        ok: false,
+        error:
+          'Tous les champs obligatoires (Titre, Description, Date, Heure, Lieu et Catégorie) doivent être renseignés pour publier le brouillon.',
+      };
+    }
+  } else if (!title || !location || !category) {
     return {
       ok: false,
-      error: 'Le titre et le lieu de l’événement sont obligatoires.',
+      error:
+        'Le titre, le lieu et la catégorie de l’événement sont obligatoires.',
     };
   }
 
@@ -1400,20 +1438,46 @@ export function updateManagedEvent(
     };
   }
 
+  const nextPriceAmount =
+    formData.priceAmount !== undefined
+      ? Number(formData.priceAmount)
+      : Number(currentEvent.priceAmount ?? 0);
+
+  if (!Number.isFinite(nextPriceAmount) || nextPriceAmount < 0) {
+    return {
+      ok: false,
+      error: 'Le tarif doit être supérieur ou égal à 0 €.',
+    };
+  }
+
   const nextStartIso =
-    formData.dateInput && formData.timeInput
-      ? `${formData.dateInput}T${formData.timeInput}:00`
+    dateInput && timeInput
+      ? `${dateInput}T${timeInput}:00`
       : currentEvent.startIso;
 
-  if (publishIfDraft && nextStartIso) {
+  if (nextStartIso) {
     const startMs = new Date(nextStartIso).getTime();
-    const referenceNowMs = new Date(referenceDateIso).getTime();
-    if (!Number.isNaN(startMs) && startMs < referenceNowMs) {
+    if (Number.isNaN(startMs)) {
       return {
         ok: false,
-        error:
-          'Impossible de publier un événement dont la date est déjà passée.',
+        error: 'La date ou l’heure saisie est invalide.',
       };
+    }
+    const willBePublished =
+      publishIfDraft ||
+      currentEvent.publicationStatus === EVENT_PUBLICATION_STATUS.PUBLISHED;
+    const dateChanged =
+      formData.dateInput !== undefined || formData.timeInput !== undefined;
+
+    if (publishIfDraft || (willBePublished && dateChanged)) {
+      const referenceNowMs = new Date(referenceDateIso).getTime();
+      if (startMs < referenceNowMs) {
+        return {
+          ok: false,
+          error:
+            'Impossible de publier ou programmer un événement à venir sur une date déjà passée.',
+        };
+      }
     }
   }
 
@@ -1421,31 +1485,53 @@ export function updateManagedEvent(
     0,
     nextTotalCapacity - alreadyRegisteredCount
   );
-  const nextPriceAmount =
-    formData.priceAmount !== undefined
-      ? Number(formData.priceAmount)
-      : currentEvent.priceAmount;
   const nextPriceText =
     formData.priceText !== undefined
       ? formData.priceText
-      : nextPriceAmount !== undefined
-      ? nextPriceAmount <= 0
-        ? 'Gratuit'
-        : `${nextPriceAmount} €`
-      : currentEvent.priceText;
+      : nextPriceAmount <= 0
+      ? 'Gratuit'
+      : `${nextPriceAmount} €`;
+
+  let derivedDateFields = {};
+  if (nextStartIso && !Number.isNaN(new Date(nextStartIso).getTime())) {
+    const dateObj = new Date(nextStartIso);
+    const dayNumber = String(dateObj.getDate());
+    const monthShort = new Intl.DateTimeFormat('fr-FR', { month: 'short' })
+      .format(dateObj)
+      .toUpperCase();
+    const dateBadge = `${dayNumber} ${monthShort} ${dateObj.getFullYear()}`;
+    const computedSchedule =
+      formData.schedule ||
+      (formData.dateInput !== undefined || formData.timeInput !== undefined
+        ? `${formatShortFrenchDate(dateObj)} · ${(timeInput || '18:00').replace(
+            ':',
+            ' h '
+          )}`
+        : currentEvent.schedule);
+    derivedDateFields = {
+      dayNumber,
+      monthShort,
+      dateBadge,
+      schedule: computedSchedule,
+      dateInput,
+      timeInput,
+    };
+  }
 
   const updatedEvent = {
     ...currentEvent,
+    ...derivedDateFields,
     title,
     description,
     location,
     category,
     startIso: nextStartIso,
-    schedule: formData.schedule || currentEvent.schedule,
     totalCapacity: nextTotalCapacity,
     remainingSeats: nextRemainingSeats,
     remainingSeatsText: formatRemainingSeatsText(nextRemainingSeats),
+    priceAmount: nextPriceAmount,
     priceText: nextPriceText,
+    image: formData.image || currentEvent.image || PUBLIC_EVENTS[0].image,
     publicationStatus: publishIfDraft
       ? EVENT_PUBLICATION_STATUS.PUBLISHED
       : currentEvent.publicationStatus,
@@ -1501,6 +1587,11 @@ export function deleteManagedEvent(eventId) {
   const updatedEvents = allEvents.filter((evt) => evt.id !== eventId);
   saveManagedEventsStore(updatedEvents);
 
+  // Nettoyer également l'entrée des places synchronisées
+  const seatsMap = getSynchronizedSeatsMap(updatedEvents);
+  delete seatsMap[eventId];
+  writeStorageJson(EVENT_SEATS_STORAGE_KEY, seatsMap);
+
   // Retirer également cet événement des inscriptions étudiantes actives
   const storedRegistrations = readStorageJson(
     STUDENT_REGISTRATIONS_STORAGE_KEY,
@@ -1552,7 +1643,7 @@ export function getManagedAnnouncementsView({ search = '' } = {}) {
       String(ann.title || '')
         .toLowerCase()
         .includes(normalizedSearch) ||
-      String(ann.excerpt || '')
+      String(ann.content || ann.excerpt || '')
         .toLowerCase()
         .includes(normalizedSearch) ||
       String(ann.category || '')
@@ -1575,9 +1666,9 @@ export function createManagedAnnouncement(formData = {}) {
 
   const title = String(formData.title || '').trim();
   const category = String(formData.category || 'Vie associative').trim();
-  const excerpt = String(formData.excerpt || formData.content || '').trim();
+  const content = String(formData.content ?? formData.excerpt ?? '').trim();
 
-  if (!title || !category || !excerpt) {
+  if (!title || !category || !content) {
     return {
       ok: false,
       error:
@@ -1593,7 +1684,8 @@ export function createManagedAnnouncement(formData = {}) {
     category,
     date: '8 novembre 2026',
     title,
-    excerpt,
+    content,
+    excerpt: content,
     author: `Par ${actorFullName} · Bureau Agora`,
     authorName: actorFullName,
     featuredOnHome: true,
@@ -1645,12 +1737,12 @@ export function updateManagedAnnouncement(announcementId, formData = {}) {
     formData.category !== undefined
       ? String(formData.category).trim()
       : existing.category;
-  const excerpt =
-    formData.excerpt !== undefined || formData.content !== undefined
-      ? String(formData.excerpt ?? formData.content).trim()
-      : existing.excerpt;
+  const content =
+    formData.content !== undefined || formData.excerpt !== undefined
+      ? String(formData.content ?? formData.excerpt).trim()
+      : String(existing.content ?? existing.excerpt ?? '');
 
-  if (!title || !category || !excerpt) {
+  if (!title || !category || !content) {
     return {
       ok: false,
       error:
@@ -1662,7 +1754,8 @@ export function updateManagedAnnouncement(announcementId, formData = {}) {
     ...existing,
     title,
     category,
-    excerpt,
+    content,
+    excerpt: content,
   };
 
   const updatedList = currentList.map((ann, idx) =>

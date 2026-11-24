@@ -17,6 +17,8 @@ import StudentEventsPage from '../pages/student/StudentEventsPage';
 import ManagementDashboardPage from '../pages/president/ManagementDashboardPage';
 import ManagementRequestsPage from '../pages/president/ManagementRequestsPage';
 import ManagementMembersPage from '../pages/president/ManagementMembersPage';
+import ManagementEventsPage from '../pages/president/ManagementEventsPage';
+import ManagementAnnouncementsPage from '../pages/president/ManagementAnnouncementsPage';
 
 function ManagementRoutePlaceholder({ eyebrow, title, subtitle }) {
   return (
@@ -48,26 +50,8 @@ function renderManagementChildRoutes({ includeTreasury = false }) {
       <Route path="dashboard" element={<ManagementDashboardPage />} />
       <Route path="demandes" element={<ManagementRequestsPage />} />
       <Route path="membres" element={<ManagementMembersPage />} />
-      <Route
-        path="evenements"
-        element={
-          <ManagementRoutePlaceholder
-            eyebrow="GESTION DES ÉVÉNEMENTS"
-            title="Des moments à faire vivre."
-            subtitle="Créez les prochains rendez-vous et suivez les inscriptions."
-          />
-        }
-      />
-      <Route
-        path="annonces"
-        element={
-          <ManagementRoutePlaceholder
-            eyebrow="GESTION DES ANNONCES"
-            title="La voix de votre association."
-            subtitle="Partagez les infos qui font vivre le campus."
-          />
-        }
-      />
+      <Route path="evenements" element={<ManagementEventsPage />} />
+      <Route path="annonces" element={<ManagementAnnouncementsPage />} />
       {includeTreasury && (
         <Route
           path="tresorerie"
