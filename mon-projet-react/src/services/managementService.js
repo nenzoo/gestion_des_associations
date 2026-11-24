@@ -194,54 +194,20 @@ function setUserStatusOverride(email, patch) {
 
 function getManagementRequestsStore() {
   const stored = readStorageJson(MANAGEMENT_REQUESTS_STORAGE_KEY, null);
-  let list = Array.isArray(stored)
+  const list = Array.isArray(stored)
     ? stored.filter((item) => item && typeof item === 'object' && item.id)
     : [...INITIAL_MANAGEMENT_REQUESTS];
 
-  // Intégrer également toute demande soumise depuis `/adhesion` si elle n'est pas déjà présente
-  const latestSubmitted = readStorageJson(LATEST_REQUEST_STORAGE_KEY, null);
-  if (
-    latestSubmitted &&
-    typeof latestSubmitted === 'object' &&
-    latestSubmitted.email
-  ) {
-    const cleanEmail = String(latestSubmitted.email).trim().toLowerCase();
-    const existsInRequests = list.some(
-      (req) => String(req.email || '').toLowerCase() === cleanEmail
-    );
-    const existsInMembers = INITIAL_ASSOCIATION_MEMBERS.some(
-      (m) => String(m.email || '').toLowerCase() === cleanEmail
-    );
-    if (
-      !existsInRequests &&
-      !existsInMembers &&
-      latestSubmitted.status === MEMBERSHIP_STATUS.EN_ATTENTE
-    ) {
-      const dynamicReq = {
-        id: latestSubmitted.id || `req-${cleanEmail}`,
-        userId: `usr-${latestSubmitted.id || cleanEmail}`,
-        firstName: latestSubmitted.firstName || 'Étudiant',
-        lastName: latestSubmitted.lastName || 'test',
-        initials: computeInitials(
-          latestSubmitted.firstName,
-          latestSubmitted.lastName
-        ),
-        email: latestSubmitted.email,
-        studentNumber: latestSubmitted.studentNumber || '22610890',
-        submittedAt: latestSubmitted.submittedAt || '2026-11-10',
-        submittedAtLabel: formatShortFrenchDate(
-          latestSubmitted.submittedAt || '2026-11-10'
-        ),
-        dashboardSubmittedLabel: `Reçue le ${formatShortFrenchDate(
-          latestSubmitted.submittedAt || '2026-11-10'
-        )}`,
-        status: MEMBERSHIP_STATUS.EN_ATTENTE,
-      };
-      list = [dynamicReq, ...list];
-    }
-  }
-
-  return list;
+  return list.map((item) => ({
+    ...item,
+    initials: item.initials || computeInitials(item.firstName, item.lastName),
+    submittedAtLabel:
+      item.submittedAtLabel ||
+      formatShortFrenchDate(item.submittedAt || '2026-11-06'),
+    dashboardSubmittedLabel:
+      item.dashboardSubmittedLabel ||
+      `Reçue le ${formatShortFrenchDate(item.submittedAt || '2026-11-06')}`,
+  }));
 }
 
 function saveManagementRequestsStore(list) {
@@ -1893,5 +1859,6 @@ export function resetManagementDemoData() {
   writeStorageJson(STUDENT_REGISTRATIONS_STORAGE_KEY, null);
   writeStorageJson(EVENT_SEATS_STORAGE_KEY, null);
   writeStorageJson(LATEST_REQUEST_STORAGE_KEY, null);
+  writeStorageJson(STUDENT_PROFILES_STORAGE_KEY, null);
   notifyManagementUpdated();
 }

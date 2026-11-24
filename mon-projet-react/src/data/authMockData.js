@@ -27,11 +27,11 @@ export const ROLES = {
 };
 
 export const INITIAL_MEMBERSHIP_FORM = {
-  lastName: 'Laurent',
-  firstName: 'Manon',
-  email: 'manon.laurent@univ-lyon2.fr',
-  studentNumber: '22610482',
-  acceptedTerms: true,
+  lastName: '',
+  firstName: '',
+  email: '',
+  studentNumber: '',
+  acceptedTerms: false,
 };
 
 export const INITIAL_LOGIN_FORM = {

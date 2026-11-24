@@ -49,8 +49,21 @@ function MembershipRequestPage() {
       return;
     }
 
-    submitMembershipRequest(formData);
-    navigate('/adhesion/envoyee');
+    const result = submitMembershipRequest(formData);
+    if (!result.ok) {
+      setErrorMessage(
+        result.error || 'Impossible d’enregistrer ta demande d’adhésion.'
+      );
+      return;
+    }
+
+    navigate('/adhesion/envoyee', {
+      state: {
+        requestId: result.request.id,
+        email: result.request.email,
+        status: result.request.status,
+      },
+    });
   };
 
   return (

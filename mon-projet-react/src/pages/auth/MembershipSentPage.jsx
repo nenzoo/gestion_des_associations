@@ -8,11 +8,52 @@ import infoIcon from '../../assets/icons/info.svg';
 
 function MembershipSentPage() {
   const location = useLocation();
-  const request = getLatestMembershipRequest();
-  const firstName = request?.firstName || 'Manon';
-  const email = request?.email || 'manon.laurent@univ-lyon2.fr';
-  const status =
-    location.state?.status || request?.status || MEMBERSHIP_STATUS.EN_ATTENTE;
+  const request = getLatestMembershipRequest({
+    requestId: location.state?.requestId,
+    email: location.state?.email,
+  });
+
+  if (!request) {
+    return (
+      <AuthSplitShell>
+        <div className="auth-intro">
+          <div className="auth-intro__badge-icon">
+            <img
+              src={circleCheckVioletIcon}
+              alt=""
+              className="auth-intro__icon"
+            />
+          </div>
+          <h2 className="auth-intro__title">Suivi de demande d’adhésion</h2>
+          <p className="auth-intro__subtitle">
+            Aucune demande active n’a pu être identifiée dans cette session.
+            Connecte-toi avec tes identifiants ou dépose une demande d’adhésion.
+          </p>
+        </div>
+
+        <div className="auth-banner auth-banner--error" role="status">
+          <img src={infoIcon} alt="" className="auth-banner__icon" />
+          <p className="auth-banner__text">
+            Pour protéger la confidentialité des candidatures, le suivi de
+            dossier nécessite une connexion ou une soumission directe depuis le
+            formulaire d’adhésion.
+          </p>
+        </div>
+
+        <Link to="/connexion" className="auth-primary-btn">
+          Se connecter pour suivre mon dossier
+        </Link>
+
+        <Link to="/adhesion" className="auth-ghost-btn">
+          Déposer une demande d’adhésion
+        </Link>
+      </AuthSplitShell>
+    );
+  }
+
+  const firstName = request.firstName;
+  const email = request.email;
+  const status = request.status || MEMBERSHIP_STATUS.EN_ATTENTE;
   const isRefused = status === MEMBERSHIP_STATUS.REFUSEE;
   const isRevoked = status === 'REVOQUEE';
   const isDenied = isRefused || isRevoked;
