@@ -558,12 +558,18 @@ export function loginWithCredentials({ email, password }) {
   if (!cleanEmail || !password) {
     return {
       ok: false,
+      code: 'MISSING_CREDENTIALS',
       error: 'Saisis ton adresse e-mail universitaire et ton mot de passe.',
     };
   }
 
   const matchedUser = MOCK_USERS.find(
     (u) => u.email.toLowerCase() === cleanEmail
+  );
+
+  const members = readPersistedMembersList();
+  const matchedMember = members.find(
+    (m) => String(m.email || '').toLowerCase() === cleanEmail
   );
 
   const requests = readPersistedRequestsList();
@@ -573,9 +579,45 @@ export function loginWithCredentials({ email, password }) {
       (req) => String(req.email || '').toLowerCase() === cleanEmail
     );
 
+  const decisions = readPersistedDecisionsList();
+  const matchedDecision = decisions.find(
+    (dec) => String(dec.email || '').toLowerCase() === cleanEmail
+  );
+
+  const statusOverride = readUserStatusOverride(cleanEmail);
+
   let sessionUser;
+
   if (matchedUser) {
-    sessionUser = { ...matchedUser };
+    sessionUser = {
+      ...matchedUser,
+      ...(matchedMember
+        ? {
+            role: matchedMember.role || matchedUser.role,
+            membershipStatus:
+              matchedMember.membershipStatus || matchedUser.membershipStatus,
+            membershipAccessStatus:
+              matchedMember.membershipAccessStatus ||
+              matchedMember.badgeLabel ||
+              matchedUser.membershipAccessStatus,
+          }
+        : {}),
+    };
+  } else if (matchedMember) {
+    sessionUser = {
+      id: matchedMember.id,
+      firstName: matchedMember.firstName,
+      lastName: matchedMember.lastName,
+      email: cleanEmail,
+      studentNumber: matchedMember.studentNumber,
+      role: matchedMember.role || ROLES.STUDENT,
+      membershipStatus:
+        matchedMember.membershipStatus || MEMBERSHIP_STATUS.ACCEPTEE,
+      membershipAccessStatus:
+        matchedMember.membershipAccessStatus ||
+        matchedMember.badgeLabel ||
+        MEMBER_BADGE_STATUS.ACTIVE,
+    };
   } else if (matchedRequest) {
     sessionUser = {
       id: matchedRequest.userId || `usr-${matchedRequest.id}`,
@@ -585,15 +627,41 @@ export function loginWithCredentials({ email, password }) {
       studentNumber: matchedRequest.studentNumber,
       role: ROLES.STUDENT,
       membershipStatus: matchedRequest.status,
+      membershipAccessStatus: null,
+    };
+  } else if (matchedDecision) {
+    sessionUser = {
+      id: matchedDecision.userId || `usr-${matchedDecision.id}`,
+      firstName: matchedDecision.firstName,
+      lastName: matchedDecision.lastName,
+      email: cleanEmail,
+      studentNumber: matchedDecision.studentNumber,
+      role: ROLES.STUDENT,
+      membershipStatus: matchedDecision.status,
+      membershipAccessStatus:
+        matchedDecision.status === MEMBERSHIP_STATUS.ACCEPTEE
+          ? MEMBER_BADGE_STATUS.ACTIVE
+          : null,
+    };
+  } else if (statusOverride && (statusOverride.role || statusOverride.membershipStatus)) {
+    sessionUser = {
+      id: statusOverride.id || `usr-${cleanEmail}`,
+      firstName: statusOverride.firstName || '',
+      lastName: statusOverride.lastName || '',
+      email: cleanEmail,
+      studentNumber: statusOverride.studentNumber || '',
+      role: statusOverride.role || ROLES.STUDENT,
+      membershipStatus: statusOverride.membershipStatus ?? null,
+      membershipAccessStatus: statusOverride.membershipAccessStatus ?? null,
     };
   } else {
-    sessionUser = {
-      ...MOCK_USERS[0],
-      email: cleanEmail,
+    return {
+      ok: false,
+      code: 'UNKNOWN_USER',
+      error: 'Aucun compte n’est associé à cette adresse e-mail universitaire.',
     };
   }
 
-  const statusOverride = readUserStatusOverride(cleanEmail);
   if (statusOverride) {
     sessionUser = {
       ...sessionUser,
@@ -604,6 +672,7 @@ export function loginWithCredentials({ email, password }) {
   writeStorageJson(SESSION_STORAGE_KEY, sessionUser);
 
   const pendingRequest =
+    sessionUser.role !== ROLES.ADMIN &&
     sessionUser.membershipStatus === MEMBERSHIP_STATUS.EN_ATTENTE
       ? findLatestRecordByEmail(cleanEmail)
       : null;
@@ -624,16 +693,30 @@ export function getCurrentUser() {
     return null;
   }
 
-  if (storedUser.email) {
-    const statusOverride = readUserStatusOverride(storedUser.email);
+  let resolvedUser = { ...storedUser };
+
+  if (resolvedUser.email) {
+    const cleanEmail = String(resolvedUser.email).trim().toLowerCase();
+    const matchedMember = readPersistedMembersList().find(
+      (m) => String(m.email || '').toLowerCase() === cleanEmail
+    );
+    if (
+      matchedMember &&
+      (matchedMember.membershipAccessStatus === MEMBER_BADGE_STATUS.REVOQUEE ||
+        matchedMember.badgeLabel === MEMBER_BADGE_STATUS.REVOQUEE)
+    ) {
+      resolvedUser.membershipAccessStatus = MEMBER_BADGE_STATUS.REVOQUEE;
+    }
+
+    const statusOverride = readUserStatusOverride(cleanEmail);
     if (statusOverride) {
-      return {
-        ...storedUser,
+      resolvedUser = {
+        ...resolvedUser,
         ...statusOverride,
       };
     }
   }
-  return storedUser;
+  return resolvedUser;
 }
 
 export function getCurrentSessionUser() {

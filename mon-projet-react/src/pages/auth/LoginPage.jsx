@@ -42,7 +42,10 @@ function getDefaultRouteForRole(role) {
   if (role === ROLES.SECRETARY) {
     return '/secretaire/dashboard';
   }
-  return '/etudiant/profil';
+  if (role === ROLES.STUDENT) {
+    return '/etudiant/profil';
+  }
+  return '/';
 }
 
 function LoginPage() {
@@ -72,13 +75,16 @@ function LoginPage() {
     // Règle fondamentale §4 : Si la demande d'adhésion est EN_ATTENTE ou REFUSEE,
     // ou si l'accès membre a été révoqué (membershipAccessStatus === 'REVOQUEE'),
     // l'étudiant consulte le statut de son dossier sans accéder à l'espace membre.
+    // Le compte ADMINISTRATEUR (non-membre étudiant) est exempté de ce contrôle d'adhésion.
     if (
-      result.user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE ||
-      result.user.membershipAccessStatus === 'REVOQUEE'
+      result.user.role !== ROLES.ADMIN &&
+      (result.user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE ||
+        result.user.membershipAccessStatus === 'REVOQUEE')
     ) {
       navigate('/adhesion/envoyee', {
         replace: true,
         state: {
+          email: result.user.email,
           status:
             result.user.membershipAccessStatus === 'REVOQUEE'
               ? 'REVOQUEE'

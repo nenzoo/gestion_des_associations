@@ -126,26 +126,74 @@ function getActorFirstName() {
   return 'Emma';
 }
 
-function requireBoardManagerAccess() {
+export function requireBoardManagerAccess() {
   const user = getCurrentUser();
   if (!user) {
     return {
       ok: false,
+      authorized: false,
+      accessDenied: true,
+      code: 'UNAUTHENTICATED',
       error: 'Session expirée. Connecte-toi pour effectuer cette action.',
     };
   }
-  if (
-    user.role !== ROLES.PRESIDENT &&
-    user.role !== ROLES.SECRETARY &&
-    user.role !== ROLES.ADMIN
-  ) {
+
+  // Règle métier n°5 : Seuls les membres acceptés et actifs peuvent occuper les fonctions du bureau
+  // (le compte ADMINISTRATEUR n'est pas un membre étudiant mais relève de FORBIDDEN_ROLE sur la gestion courante)
+  if (user.role !== ROLES.ADMIN) {
+    const cleanEmail = String(user.email || '').trim().toLowerCase();
+    const persistedMembers = readStorageJson(MANAGEMENT_MEMBERS_STORAGE_KEY, null);
+    const membersSource = Array.isArray(persistedMembers)
+      ? persistedMembers
+      : INITIAL_ASSOCIATION_MEMBERS;
+    const matchedMember = membersSource.find(
+      (m) =>
+        m &&
+        (m.id === user.id ||
+          String(m.email || '').toLowerCase() === cleanEmail)
+    );
+    const isRevokedInDirectory = Boolean(
+      matchedMember &&
+        (matchedMember.membershipAccessStatus === MEMBER_BADGE_STATUS.REVOQUEE ||
+          matchedMember.badgeLabel === MEMBER_BADGE_STATUS.REVOQUEE)
+    );
+
+    if (
+      user.membershipStatus !== MEMBERSHIP_STATUS.ACCEPTEE ||
+      user.membershipAccessStatus === MEMBER_BADGE_STATUS.REVOQUEE ||
+      isRevokedInDirectory
+    ) {
+      return {
+        ok: false,
+        authorized: false,
+        accessDenied: true,
+        code: 'INACTIVE_OR_REVOKED_MEMBER',
+        error:
+          'Seuls les membres acceptés et actifs peuvent exercer une fonction de gestion.',
+      };
+    }
+  }
+
+  // Règles métier n°1, n°2, n°3, n°7 : Seuls PRESIDENT et SECRETAIRE_GENERAL gèrent l'association au quotidien
+  if (user.role !== ROLES.PRESIDENT && user.role !== ROLES.SECRETARY) {
     return {
       ok: false,
+      authorized: false,
+      accessDenied: true,
+      code: 'FORBIDDEN_ROLE',
       error:
-        'Action réservée à la présidence ou au secrétariat de l’association.',
+        'Action réservée à la présidence ou au secrétariat général de l’association.',
     };
   }
-  return { ok: true, user };
+
+  return {
+    ok: true,
+    authorized: true,
+    accessDenied: false,
+    code: null,
+    error: null,
+    user,
+  };
 }
 
 /* ==========================================================================
@@ -255,25 +303,139 @@ function saveAssociationMembersStore(list) {
   writeStorageJson(MANAGEMENT_MEMBERS_STORAGE_KEY, list);
 }
 
+const NON_FINANCIAL_ACTIVITY_CATEGORIES = new Set([
+  'MEMBERSHIP',
+  'EVENT',
+  'ANNOUNCEMENT',
+]);
+
+function normalizeBoardActivityEntry(item) {
+  if (!item || typeof item !== 'object') {
+    return null;
+  }
+
+  const rawId = String(item.id || '');
+  const rawText = String(item.text || '');
+  const rawCategory = String(item.category || item.domain || item.type || '')
+    .trim()
+    .toUpperCase();
+
+  // Détection prioritaire et inconditionnelle de toute nature financière (métadonnées explicites ou anciennes entrées)
+  const hasFinancialMetadata =
+    item.isFinancial === true ||
+    rawCategory === 'TREASURY' ||
+    rawCategory === 'FINANCE' ||
+    rawCategory === 'TRANSACTION';
+  const hasFinancialIdOrPattern =
+    rawId === 'feed-depense-adam' ||
+    /^feed-(depense|recette|treasury|transaction|finance)/i.test(rawId) ||
+    /(?:^|[^\p{L}\p{N}_])(dépense|depense|recette|transaction|trésorerie|tresorerie|solde|virement|budget|cotisation)(?:$|[^\p{L}\p{N}_])/iu.test(
+      rawText
+    ) ||
+    /\d+\s*€/.test(rawText);
+
+  if (hasFinancialMetadata || hasFinancialIdOrPattern) {
+    return {
+      ...item,
+      category: 'TREASURY',
+      isFinancial: true,
+    };
+  }
+
+  if (
+    item.isFinancial === false &&
+    NON_FINANCIAL_ACTIVITY_CATEGORIES.has(rawCategory)
+  ) {
+    return {
+      ...item,
+      category: rawCategory,
+      isFinancial: false,
+    };
+  }
+
+  if (
+    rawId === 'feed-programme-novembre' ||
+    /(?:^|[^\p{L}\p{N}_])(annonce|programme)(?:$|[^\p{L}\p{N}_])/iu.test(rawText)
+  ) {
+    return {
+      ...item,
+      category: 'ANNOUNCEMENT',
+      isFinancial: false,
+    };
+  }
+
+  if (
+    rawId === 'feed-adhesion-noah' ||
+    /(?:^|[^\p{L}\p{N}_])(adhésion|adhesion|demande|membre|révoqué|revoque)(?:$|[^\p{L}\p{N}_])/iu.test(
+      rawText
+    )
+  ) {
+    return {
+      ...item,
+      category: 'MEMBERSHIP',
+      isFinancial: false,
+    };
+  }
+
+  if (
+    /(?:^|[^\p{L}\p{N}_])(événement|evenement|brouillon)(?:$|[^\p{L}\p{N}_])/iu.test(
+      rawText
+    )
+  ) {
+    return {
+      ...item,
+      category: 'EVENT',
+      isFinancial: false,
+    };
+  }
+
+  return {
+    ...item,
+    category: rawCategory || 'UNCLASSIFIED',
+    isFinancial: Boolean(item.isFinancial),
+  };
+}
+
 function getBoardActivityFeedStore() {
   const stored = readStorageJson(MANAGEMENT_ACTIVITY_FEED_STORAGE_KEY, null);
-  if (Array.isArray(stored) && stored.length > 0) {
-    return stored.filter((item) => item && typeof item === 'object' && item.id);
-  }
-  return [...INITIAL_BOARD_ACTIVITY_FEED];
+  const rawList =
+    Array.isArray(stored) && stored.length > 0
+      ? stored.filter((item) => item && typeof item === 'object' && item.id)
+      : [...INITIAL_BOARD_ACTIVITY_FEED];
+
+  return rawList.map(normalizeBoardActivityEntry).filter(Boolean);
 }
 
 function saveBoardActivityFeedStore(list) {
   writeStorageJson(MANAGEMENT_ACTIVITY_FEED_STORAGE_KEY, list);
 }
 
-function prependBoardActivity(text, timeLabel = 'À l’instant') {
+function prependBoardActivity(
+  text,
+  timeLabelOrOptions = 'À l’instant',
+  options = {}
+) {
+  let timeLabel = 'À l’instant';
+  let resolvedOptions = options;
+  if (
+    timeLabelOrOptions &&
+    typeof timeLabelOrOptions === 'object' &&
+    !Array.isArray(timeLabelOrOptions)
+  ) {
+    resolvedOptions = timeLabelOrOptions;
+  } else if (typeof timeLabelOrOptions === 'string' && timeLabelOrOptions.trim()) {
+    timeLabel = timeLabelOrOptions;
+  }
+
+  const { category = 'MEMBERSHIP', isFinancial = false } = resolvedOptions || {};
   const currentFeed = getBoardActivityFeedStore();
-  const nextEntry = {
+  const nextEntry = normalizeBoardActivityEntry({
     id: `feed-${Date.now()}`,
     timeLabel,
     text,
-  };
+    category,
+    isFinancial,
+  });
   const updated = [nextEntry, ...currentFeed];
   saveBoardActivityFeedStore(updated);
   return nextEntry;
@@ -507,6 +669,26 @@ export function getMembershipRequestsView({
   search = '',
   sortOrder = 'oldest',
 } = {}) {
+  const access = requireBoardManagerAccess();
+  if (!access.ok) {
+    return {
+      ok: false,
+      authorized: false,
+      accessDenied: true,
+      code: access.code,
+      error: access.error,
+      tab,
+      items: [],
+      pendingRequests: [],
+      recentDecisions: [],
+      counts: {
+        pending: null,
+        accepted: null,
+        refused: null,
+      },
+    };
+  }
+
   const requests = getManagementRequestsStore();
   const decisions = getManagementDecisionsStore();
   const normalizedSearch = String(search || '')
@@ -551,6 +733,9 @@ export function getMembershipRequestsView({
     });
 
   return {
+    ok: true,
+    authorized: true,
+    accessDenied: false,
     tab,
     items: filteredItems,
     pendingRequests,
@@ -711,7 +896,8 @@ export function acceptMembershipRequest(requestId) {
 
   // 4. Ajouter dans le fil du bureau
   prependBoardActivity(
-    `${actorFirstName} a accepté l’adhésion de ${targetRequest.firstName}.`
+    `${actorFirstName} a accepté l’adhésion de ${targetRequest.firstName}.`,
+    { category: 'MEMBERSHIP', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -833,7 +1019,8 @@ export function refuseMembershipRequest(requestId, reason = '') {
   }
 
   prependBoardActivity(
-    `${actorFirstName} a refusé la demande de ${targetRequest.firstName}.`
+    `${actorFirstName} a refusé la demande de ${targetRequest.firstName}.`,
+    { category: 'MEMBERSHIP', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -852,6 +1039,22 @@ export function getAssociationMembersView({
   search = '',
   statusFilter = 'ALL',
 } = {}) {
+  const access = requireBoardManagerAccess();
+  if (!access.ok) {
+    return {
+      ok: false,
+      authorized: false,
+      accessDenied: true,
+      code: access.code,
+      error: access.error,
+      members: [],
+      activeCount: null,
+      revokedCount: null,
+      totalDirectoryCount: null,
+      academicYearLabel: DASHBOARD_REFERENCE_METRICS.academicYearLabel,
+    };
+  }
+
   const members = getAssociationMembersStore();
   const normalizedSearch = String(search || '')
     .trim()
@@ -882,6 +1085,9 @@ export function getAssociationMembersView({
   ).length;
 
   return {
+    ok: true,
+    authorized: true,
+    accessDenied: false,
     members: filteredMembers,
     activeCount,
     revokedCount,
@@ -1049,7 +1255,8 @@ export function revokeAssociationMember(
 
   const actorFirstName = getActorFirstName();
   prependBoardActivity(
-    `${actorFirstName} a révoqué l’adhésion de ${targetMember.firstName}.`
+    `${actorFirstName} a révoqué l’adhésion de ${targetMember.firstName}.`,
+    { category: 'MEMBERSHIP', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -1062,6 +1269,11 @@ export function revokeAssociationMember(
 }
 
 export function exportAssociationMembersCsv() {
+  const access = requireBoardManagerAccess();
+  if (!access.ok) {
+    return '';
+  }
+
   const { members } = getAssociationMembersView();
   const header = ['Nom complet', 'E-mail', 'Numéro étudiant', 'Rôle', 'Statut'];
   const rows = members.map((m) => [
@@ -1084,6 +1296,28 @@ export function getManagedEventsView({
   category = 'all',
   referenceDateIso = PROJECT_REFERENCE_DATE_ISO,
 } = {}) {
+  const access = requireBoardManagerAccess();
+  if (!access.ok) {
+    return {
+      ok: false,
+      authorized: false,
+      accessDenied: true,
+      code: access.code,
+      error: access.error,
+      tab,
+      events: [],
+      upcomingEvents: [],
+      draftEvents: [],
+      pastEvents: [],
+      categories: [],
+      counts: {
+        upcoming: null,
+        drafts: null,
+        past: null,
+      },
+    };
+  }
+
   const referenceNowMs = new Date(referenceDateIso).getTime();
   const allEvents = getManagedEventsStore();
   const seatsMap = getSynchronizedSeatsMap(allEvents);
@@ -1160,6 +1394,9 @@ export function getManagedEventsView({
   );
 
   return {
+    ok: true,
+    authorized: true,
+    accessDenied: false,
     tab,
     events: filteredList,
     upcomingEvents,
@@ -1284,7 +1521,8 @@ export function createManagedEvent(
   prependBoardActivity(
     asDraft
       ? `${actorFirstName} a enregistré le brouillon « ${newEvent.title} ».`
-      : `${actorFirstName} a publié l’événement « ${newEvent.title} ».`
+      : `${actorFirstName} a publié l’événement « ${newEvent.title} ».`,
+    { category: 'EVENT', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -1515,7 +1753,8 @@ export function updateManagedEvent(
   prependBoardActivity(
     publishIfDraft
       ? `${actorFirstName} a publié l’événement « ${updatedEvent.title} ».`
-      : `${actorFirstName} a mis à jour l’événement « ${updatedEvent.title} ».`
+      : `${actorFirstName} a mis à jour l’événement « ${updatedEvent.title} ».`,
+    { category: 'EVENT', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -1580,7 +1819,8 @@ export function deleteManagedEvent(eventId) {
 
   const actorFirstName = getActorFirstName();
   prependBoardActivity(
-    `${actorFirstName} a supprimé l’événement « ${targetEvent.title} ».`
+    `${actorFirstName} a supprimé l’événement « ${targetEvent.title} ».`,
+    { category: 'EVENT', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -1596,6 +1836,19 @@ export function deleteManagedEvent(eventId) {
    ========================================================================== */
 
 export function getManagedAnnouncementsView({ search = '' } = {}) {
+  const access = requireBoardManagerAccess();
+  if (!access.ok) {
+    return {
+      ok: false,
+      authorized: false,
+      accessDenied: true,
+      code: access.code,
+      error: access.error,
+      announcements: [],
+      totalPublishedCount: null,
+    };
+  }
+
   const allAnnouncements = getManagedAnnouncementsStore();
   const normalizedSearch = String(search || '')
     .trim()
@@ -1619,6 +1872,9 @@ export function getManagedAnnouncementsView({ search = '' } = {}) {
   });
 
   return {
+    ok: true,
+    authorized: true,
+    accessDenied: false,
     announcements: filtered,
     totalPublishedCount: allAnnouncements.length,
   };
@@ -1662,7 +1918,10 @@ export function createManagedAnnouncement(formData = {}) {
   const currentList = getManagedAnnouncementsStore();
   saveManagedAnnouncementsStore([newAnnouncement, ...currentList]);
 
-  prependBoardActivity(`${actorFirstName} a publié l’annonce « ${title} ».`);
+  prependBoardActivity(
+    `${actorFirstName} a publié l’annonce « ${title} ».`,
+    { category: 'ANNOUNCEMENT', isFinancial: false }
+  );
   notifyManagementUpdated();
 
   return {
@@ -1731,7 +1990,8 @@ export function updateManagedAnnouncement(announcementId, formData = {}) {
 
   const actorFirstName = getActorFirstName();
   prependBoardActivity(
-    `${actorFirstName} a modifié l’annonce « ${updatedAnnouncement.title} ».`
+    `${actorFirstName} a modifié l’annonce « ${updatedAnnouncement.title} ».`,
+    { category: 'ANNOUNCEMENT', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -1769,7 +2029,8 @@ export function deleteManagedAnnouncement(announcementId) {
 
   const actorFirstName = getActorFirstName();
   prependBoardActivity(
-    `${actorFirstName} a supprimé l’annonce « ${target.title} ».`
+    `${actorFirstName} a supprimé l’annonce « ${target.title} ».`,
+    { category: 'ANNOUNCEMENT', isFinancial: false }
   );
   notifyManagementUpdated();
 
@@ -1787,8 +2048,45 @@ export function deleteManagedAnnouncement(announcementId) {
 export function getManagementDashboardOverview({
   referenceDateIso = PROJECT_REFERENCE_DATE_ISO,
 } = {}) {
-  const user = getCurrentUser();
+  const access = requireBoardManagerAccess();
+  if (!access.ok) {
+    return {
+      ok: false,
+      authorized: false,
+      accessDenied: true,
+      code: access.code,
+      error: access.error,
+      canViewTreasury: false,
+      greetingTitle: '',
+      dateSubtitle: DASHBOARD_REFERENCE_METRICS.dashboardDateLabel,
+      pendingCount: null,
+      kpis: {
+        activeMembersCount: null,
+        activeMembersDeltaText: null,
+        pendingRequestsCount: null,
+        oldestPendingText: null,
+        upcomingEventsCount: null,
+        totalRegistrationsText: null,
+        treasuryBalance: null,
+        treasuryBalanceText: null,
+        treasuryNoteText: null,
+      },
+      upcomingMeetings: [],
+      latestPendingRequests: [],
+      goalProgress: {
+        current: null,
+        target: null,
+        percentage: null,
+        remainingToGoal: null,
+        summaryText: null,
+      },
+      boardActivityFeed: [],
+    };
+  }
+
+  const user = access.user;
   const firstName = user?.firstName || 'Emma';
+  const canViewTreasury = user.role === ROLES.PRESIDENT;
   const requestsView = getMembershipRequestsView();
   const eventsView = getManagedEventsView({
     tab: 'UPCOMING',
@@ -1814,7 +2112,20 @@ export function getManagementDashboardOverview({
     0
   );
 
+  const fullActivityFeed = getBoardActivityFeedStore();
+  const filteredActivityFeed = canViewTreasury
+    ? fullActivityFeed
+    : fullActivityFeed.filter(
+        (item) =>
+          item.isFinancial === false &&
+          NON_FINANCIAL_ACTIVITY_CATEGORIES.has(item.category)
+      );
+
   return {
+    ok: true,
+    authorized: true,
+    accessDenied: false,
+    canViewTreasury,
     greetingTitle: `Bonjour ${firstName} ☀`,
     dateSubtitle: DASHBOARD_REFERENCE_METRICS.dashboardDateLabel,
     pendingCount: requestsView.counts.pending,
@@ -1829,8 +2140,20 @@ export function getManagementDashboardOverview({
           : 'Toutes les demandes sont traitées',
       upcomingEventsCount: eventsView.counts.upcoming,
       totalRegistrationsText: `${totalRegistrationsCount} inscriptions au total`,
-      treasuryBalanceText: DASHBOARD_REFERENCE_METRICS.treasuryBalanceText,
-      treasuryNoteText: DASHBOARD_REFERENCE_METRICS.treasuryNoteText,
+      treasuryBalance: canViewTreasury
+        ? Number(
+            String(DASHBOARD_REFERENCE_METRICS.treasuryBalanceText || '').replace(
+              /[^\d.-]/g,
+              ''
+            )
+          ) || 1840
+        : null,
+      treasuryBalanceText: canViewTreasury
+        ? DASHBOARD_REFERENCE_METRICS.treasuryBalanceText
+        : null,
+      treasuryNoteText: canViewTreasury
+        ? DASHBOARD_REFERENCE_METRICS.treasuryNoteText
+        : null,
     },
     upcomingMeetings: eventsView.upcomingEvents.slice(0, 3),
     latestPendingRequests: requestsView.pendingRequests.slice(0, 3),
@@ -1841,7 +2164,7 @@ export function getManagementDashboardOverview({
       remainingToGoal,
       summaryText: `${progressPercentage} % de l’objectif annuel. Encore ${remainingToGoal} membres pour atteindre l’objectif annuel.`,
     },
-    boardActivityFeed: getBoardActivityFeedStore().slice(0, 3),
+    boardActivityFeed: filteredActivityFeed.slice(0, 3),
   };
 }
 
